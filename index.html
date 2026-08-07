@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>競馬オッズ・着順計算システム</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>競馬オッズ・着順計算システム</h1>
+  </header>
+
+  <main class="container">
+    <!-- 設定エリア -->
+    <section class="config-card">
+      <div class="input-group">
+        <label for="deductionRate">控除率（例: 0.25）:</label>
+        <input type="number" id="deductionRate" value="0.25" step="0.01" min="0" max="0.99">
+      </div>
+      <div class="input-group">
+        <label for="horseCount">出走頭数:</label>
+        <input type="number" id="horseCount" value="8" min="2" max="18">
+        <button id="btnSetHorses" onclick="setupHorses()">頭数変更</button>
+      </div>
+      <div class="button-group">
+        <button class="btn btn-primary" onclick="calculateOddsAndResults()">計算・結果確定</button>
+        <button class="btn btn-secondary" onclick="assignRandomRanks()">【検証】ランダム着順</button>
+        <button class="btn btn-danger" onclick="resetHistory()">履歴リセット</button>
+      </div>
+    </section>
+
+    <!-- メインデータテーブル -->
+    <section class="table-container">
+      <table id="mainTable">
+        <thead>
+          <tr>
+            <th>馬番</th>
+            <th>馬名</th>
+            <th>順位</th>
+            <th>単勝オッズ</th>
+            <th>着順入力</th>
+            <th>勝率</th>
+            <th colspan="15">過去15戦の履歴 (左が最新)</th>
+          </tr>
+        </thead>
+        <tbody id="horseTableBody">
+          <!-- JSで動的生成 -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 連勝式（馬単・3連単）オッズ計算結果 -->
+    <section class="results-card">
+      <h2>連勝式 適正オッズ</h2>
+      <div class="odds-grid">
+        <div class="odds-box">
+          <h3>2連単（馬単）</h3>
+          <div class="combination">
+            馬番 <input type="text" id="exacta1" size="3" onchange="calculateExactaOdds()">
+            → 馬番 <input type="text" id="exacta2" size="3" onchange="calculateExactaOdds()">
+          </div>
+          <div class="odds-display">適正オッズ: <span id="exactaOddsText">---</span> 倍</div>
+          <div class="payout-display">5,000円時払戻: <span id="exactaPayoutText">---</span> 円</div>
+        </div>
+
+        <div class="odds-box">
+          <h3>3連単</h3>
+          <div class="combination">
+            <input type="text" id="trifecta1" size="3" onchange="calculateTrifectaOdds()"> →
+            <input type="text" id="trifecta2" size="3" onchange="calculateTrifectaOdds()"> →
+            <input type="text" id="trifecta3" size="3" onchange="calculateTrifectaOdds()">
+          </div>
+          <div class="odds-display">適正オッズ: <span id="trifectaOddsText">---</span> 倍</div>
+          <div class="payout-display">5,000円時払戻: <span id="trifectaPayoutText">---</span> 円</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
