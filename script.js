@@ -168,19 +168,6 @@ function calculateOddsAndResults() {
     alert("【結果確定】履歴を更新しました。");
   }
 
-  // 入力枠に値がない場合はデフォルト（1・2・3番）を設定して再計算
-  const e1 = document.getElementById("exacta1");
-  const e2 = document.getElementById("exacta2");
-  const t1 = document.getElementById("trifecta1");
-  const t2 = document.getElementById("trifecta2");
-  const t3 = document.getElementById("trifecta3");
-
-  if (e1 && !e1.value) e1.value = "1";
-  if (e2 && !e2.value) e2.value = "2";
-  if (t1 && !t1.value) t1.value = "1";
-  if (t2 && !t2.value) t2.value = "2";
-  if (t3 && !t3.value) t3.value = "3";
-
   calculateExactaOdds();
   calculateTrifectaOdds();
 
@@ -250,14 +237,13 @@ function resetHistory() {
   }
 }
 
-// レース時点（1〜30回目）を指定して勝率・オッズを切り替える関数
+// レース時点（1〜30回目）を指定して勝率・オッズを切り替え、対象レースの1〜3着馬番を自動セットする関数
 function showHistoryAtRace(raceIndex) {
   raceIndex = parseInt(raceIndex);
   
   let horseStats = [];
 
   state.horses.forEach((h, index) => {
-    // 1回目〜raceIndex回目（配列のインデックスとしては 0 〜 raceIndex-1）の履歴を対象にする
     const sliced = h.history.slice(0, raceIndex);
     let winCount = 0;
     let total = 0;
@@ -269,11 +255,9 @@ function showHistoryAtRace(raceIndex) {
       }
     });
 
-    // 勝率の再計算
     const winRate = total > 0 ? winCount / total : 0;
     h.winRate = winRate;
 
-    // オッズおよび順位判定用の計算
     let rawOdds = winRate > 0 ? (1 - state.deductionRate) / winRate : 999.0;
     let oddsForRanking = Math.floor(rawOdds * 1000) / 1000;
 
@@ -299,9 +283,38 @@ function showHistoryAtRace(raceIndex) {
     state.horses[item.index].rank = currentRank + "位";
   });
 
+  // 指定された「N回目」の実際の着順結果を取得して2連単・3連単の選択枠に自動設定
+  // （例：10回目終了時点の場合、10回目の結果＝配列の index = raceIndex - 1）
+  const targetRaceIdx = raceIndex - 1;
+  let rank1Horse = "", rank2Horse = "", rank3Horse = "";
+
+  state.horses.forEach(h => {
+    const rankVal = String(h.history[targetRaceIdx]);
+    if (rankVal === "1") rank1Horse = String(h.num);
+    if (rankVal === "2") rank2Horse = String(h.num);
+    if (rankVal === "3") rank3Horse = String(h.num);
+  });
+
+  if (rank1Horse) {
+    const e1 = document.getElementById("exacta1");
+    if (e1) e1.value = rank1Horse;
+    const t1 = document.getElementById("trifecta1");
+    if (t1) t1.value = rank1Horse;
+  }
+  if (rank2Horse) {
+    const e2 = document.getElementById("exacta2");
+    if (e2) e2.value = rank2Horse;
+    const t2 = document.getElementById("trifecta2");
+    if (t2) t2.value = rank2Horse;
+  }
+  if (rank3Horse) {
+    const t3 = document.getElementById("trifecta3");
+    if (t3) t3.value = rank3Horse;
+  }
+
   renderTable();
 
-  // 馬単・3連単の再計算
+  // 自動セットされた実際の結果に基づき2連単・3连単の適正オッズを更新
   calculateExactaOdds();
   calculateTrifectaOdds();
 }
