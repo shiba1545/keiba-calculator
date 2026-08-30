@@ -267,8 +267,11 @@ function showHistoryAtRace(raceIndex) {
       h.odds = 99.0;
     }
   });
+renderTable();
 
-  renderTable();
+  // 2連単・3連単のオッズも連動して再計算する
+  calculateExactaOdds();
+  calculateTrifectaOdds();
 }
 
 // ページ読み込み時にドロップダウンの選択肢（1〜30回目）を自動生成する
