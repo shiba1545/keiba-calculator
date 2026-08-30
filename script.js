@@ -9,7 +9,7 @@ window.onload = function() {
   renderTable();
 };
 
-// データロード（ブラウザ保存領域から）
+// データロード
 function loadData() {
   const saved = localStorage.getItem("keiba_data");
   if (saved) {
@@ -27,9 +27,8 @@ function saveData() {
   localStorage.setItem("keiba_data", JSON.stringify(state));
 }
 
-// 頭数変更・初期化（指定された30パターンの着順データ）
+// 初期セットアップ
 function setupHorses() {
-  // 指定の30レース着順データ（1着〜6着）
   const raceHistory = [
     [1, 2, 3, 4, 5, 6], [1, 2, 4, 3, 5, 6], [2, 4, 1, 3, 5, 6], [1, 3, 4, 2, 5, 6], [1, 4, 2, 3, 5, 6],
     [1, 4, 3, 2, 5, 6], [1, 5, 2, 3, 4, 6], [1, 5, 2, 3, 4, 6], [1, 2, 5, 3, 4, 6], [1, 3, 5, 2, 4, 6],
@@ -39,12 +38,11 @@ function setupHorses() {
     [4, 1, 2, 3, 5, 6], [4, 2, 1, 3, 5, 6], [5, 1, 2, 3, 4, 6], [5, 2, 1, 3, 4, 6], [2, 1, 5, 3, 4, 6]
   ];
 
-  const count = 6; // 出走頭数を6頭に設定
+  const count = 6;
   document.getElementById("horseCount").value = count;
   state.horses = [];
 
   for (let i = 1; i <= count; i++) {
-    // 各レースから「馬番i」の着順を抽出
     const horseHistory = raceHistory.map(race => {
       const rank = race.indexOf(i) + 1;
       return rank > 0 ? rank : "";
@@ -93,14 +91,13 @@ function updateName(index, val) { state.horses[index].name = val; saveData(); }
 function updateHistory(horseIdx, historyIdx, val) { state.horses[horseIdx].history[historyIdx] = val; saveData(); }
 function updateUserRank(index, val) { state.horses[index].userRank = val; saveData(); }
 
-// メイン計算＆結果確定処理
+// 計算＆確定
 function calculateOddsAndResults() {
   const deductionRate = parseFloat(document.getElementById("deductionRate").value);
   state.deductionRate = deductionRate;
 
   let horseStats = [];
 
-  // 全馬の過去勝率と生オッズ計算
   state.horses.forEach((h, index) => {
     let winCount = 0;
     let validRaces = 0;
@@ -120,7 +117,6 @@ function calculateOddsAndResults() {
     horseStats.push({ index, winRate, oddsForRanking });
   });
 
-  // 人気順位計算
   let sorted = [...horseStats].sort((a, b) => a.oddsForRanking - b.oddsForRanking);
   let currentRank = 1;
   sorted.forEach((item, i) => {
@@ -130,7 +126,6 @@ function calculateOddsAndResults() {
     state.horses[item.index].rank = currentRank + "位";
   });
 
-  // オッズ計算
   let winHorse = "", secondHorse = "", thirdHorse = "";
 
   state.horses.forEach((h) => {
@@ -143,13 +138,11 @@ function calculateOddsAndResults() {
     }
     h.odds = calculatedOdds;
 
-    // 着順確認
     if (h.userRank === "1") winHorse = String(h.num);
     if (h.userRank === "2") secondHorse = String(h.num);
     if (h.userRank === "3") thirdHorse = String(h.num);
   });
 
-  // 1着入力がある場合の履歴スライド更新
   if (winHorse !== "") {
     state.horses.forEach(h => {
       h.history.unshift(h.userRank);
@@ -157,7 +150,6 @@ function calculateOddsAndResults() {
       h.userRank = "";
     });
 
-    // 馬単・3連単枠に自動セット
     if (secondHorse !== "") {
       document.getElementById("exacta1").value = winHorse;
       document.getElementById("exacta2").value = secondHorse;
@@ -218,7 +210,6 @@ function calculateTrifectaOdds() {
   document.getElementById("trifectaPayoutText").innerText = Math.floor(odds * 5000).toLocaleString();
 }
 
-// ランダム着順設定
 function assignRandomRanks() {
   let ranks = state.horses.map((_, i) => i + 1);
   for (let i = ranks.length - 1; i > 0; i--) {
@@ -229,7 +220,6 @@ function assignRandomRanks() {
   renderTable();
 }
 
-// リセット
 function resetHistory() {
   if (confirm("全てのデータを初期化しますか？")) {
     localStorage.removeItem("keiba_data");
@@ -237,13 +227,16 @@ function resetHistory() {
   }
 }
 
-// レース時点（1〜30回目）を指定して勝率・オッズを切り替え、対象レースの1〜3着馬番を自動セットする関数
+// N回目終了時点の切り替え関数
 function showHistoryAtRace(raceIndex) {
   raceIndex = parseInt(raceIndex);
-  
+
+  // 一番左（0番目）が1回目なので、N回目は raceIndex - 1 番目のインデックス
+  const targetRaceIdx = raceIndex - 1;
   let horseStats = [];
 
   state.horses.forEach((h, index) => {
+    // 1回目〜N回目（インデックス 0 〜 raceIndex - 1）までのデータを抽出
     const sliced = h.history.slice(0, raceIndex);
     let winCount = 0;
     let total = 0;
@@ -273,7 +266,7 @@ function showHistoryAtRace(raceIndex) {
     horseStats.push({ index, oddsForRanking });
   });
 
-  // 人気順位の再計算
+  // 人気順位の計算
   let sorted = [...horseStats].sort((a, b) => a.oddsForRanking - b.oddsForRanking);
   let currentRank = 1;
   sorted.forEach((item, i) => {
@@ -283,11 +276,8 @@ function showHistoryAtRace(raceIndex) {
     state.horses[item.index].rank = currentRank + "位";
   });
 
-  // 指定された「N回目」の実際の着順結果を取得して2連単・3連単の選択枠に自動設定
-  // （例：10回目終了時点の場合、10回目の結果＝配列の index = raceIndex - 1）
-  const targetRaceIdx = raceIndex - 1;
+  // N回目（targetRaceIdx）の実際の着順結果を抽出して自動反映
   let rank1Horse = "", rank2Horse = "", rank3Horse = "";
-
   state.horses.forEach(h => {
     const rankVal = String(h.history[targetRaceIdx]);
     if (rankVal === "1") rank1Horse = String(h.num);
@@ -296,30 +286,25 @@ function showHistoryAtRace(raceIndex) {
   });
 
   if (rank1Horse) {
-    const e1 = document.getElementById("exacta1");
-    if (e1) e1.value = rank1Horse;
-    const t1 = document.getElementById("trifecta1");
-    if (t1) t1.value = rank1Horse;
+    document.getElementById("exacta1").value = rank1Horse;
+    document.getElementById("trifecta1").value = rank1Horse;
   }
   if (rank2Horse) {
-    const e2 = document.getElementById("exacta2");
-    if (e2) e2.value = rank2Horse;
-    const t2 = document.getElementById("trifecta2");
-    if (t2) t2.value = rank2Horse;
+    document.getElementById("exacta2").value = rank2Horse;
+    document.getElementById("trifecta2").value = rank2Horse;
   }
   if (rank3Horse) {
-    const t3 = document.getElementById("trifecta3");
-    if (t3) t3.value = rank3Horse;
+    document.getElementById("trifecta3").value = rank3Horse;
   }
 
   renderTable();
 
-  // 自動セットされた実際の結果に基づき2連単・3连単の適正オッズを更新
+  // 反映された馬番に基づき、連勝式オッズと払戻金を計算
   calculateExactaOdds();
   calculateTrifectaOdds();
 }
 
-// ページ読み込み時にドロップダウンの選択肢（1〜30回目）を自動生成する
+// ドロップダウン生成
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("raceSelector");
   if (!select) return;
