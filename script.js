@@ -27,11 +27,29 @@ function saveData() {
   localStorage.setItem("keiba_data", JSON.stringify(state));
 }
 
-// 頭数変更・初期化
+// 頭数変更・初期化（指定された30パターンの着順データ）
 function setupHorses() {
-  const count = parseInt(document.getElementById("horseCount").value) || 8;
+  // 指定の30レース着順データ（1着〜6着）
+  const raceHistory = [
+    [1, 2, 3, 4, 5, 6], [1, 2, 4, 3, 5, 6], [2, 4, 1, 3, 5, 6], [1, 3, 4, 2, 5, 6], [1, 4, 2, 3, 5, 6],
+    [1, 4, 3, 2, 5, 6], [1, 5, 2, 3, 4, 6], [1, 5, 2, 3, 4, 6], [1, 2, 5, 3, 4, 6], [1, 3, 5, 2, 4, 6],
+    [1, 6, 2, 3, 4, 5], [1, 5, 2, 4, 3, 6], [2, 1, 3, 4, 5, 6], [2, 1, 4, 3, 5, 6], [6, 1, 2, 3, 4, 5],
+    [2, 3, 1, 4, 5, 6], [2, 3, 4, 1, 5, 6], [1, 3, 2, 4, 5, 6], [2, 4, 3, 1, 5, 6], [2, 5, 1, 3, 4, 6],
+    [3, 2, 1, 4, 5, 6], [3, 5, 1, 2, 6, 4], [3, 1, 4, 2, 5, 6], [3, 1, 2, 4, 5, 6], [4, 1, 3, 2, 5, 6],
+    [4, 1, 2, 3, 5, 6], [4, 2, 1, 3, 5, 6], [5, 1, 2, 3, 4, 6], [5, 2, 1, 3, 4, 6], [2, 1, 5, 3, 4, 6]
+  ];
+
+  const count = 6; // 出走頭数を6頭に設定
+  document.getElementById("horseCount").value = count;
   state.horses = [];
+
   for (let i = 1; i <= count; i++) {
+    // 各レースから「馬番i」の着順を抽出
+    const horseHistory = raceHistory.map(race => {
+      const rank = race.indexOf(i) + 1;
+      return rank > 0 ? rank : "";
+    });
+
     state.horses.push({
       num: i,
       name: `馬番${i}`,
@@ -39,7 +57,7 @@ function setupHorses() {
       odds: 99.0,
       userRank: "",
       winRate: 0,
-      history: new Array(15).fill("")
+      history: horseHistory
     });
   }
   saveData();
