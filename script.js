@@ -236,6 +236,7 @@ function resetHistory() {
   }
 }
 // レース時点（1〜30回目）を指定して勝率・オッズを切り替える関数
+// レース時点（1〜30回目）を指定して勝率・オッズを切り替える関数
 function showHistoryAtRace(raceIndex) {
   raceIndex = parseInt(raceIndex);
   
@@ -267,9 +268,22 @@ function showHistoryAtRace(raceIndex) {
       h.odds = 99.0;
     }
   });
-renderTable();
 
-  // 2連単・3連単のオッズも連動して再計算する
+  renderTable();
+
+  // 馬単・3連単の入力枠にデフォルト（1番・2番・3番）を設定して再計算
+  const e1 = document.getElementById("exacta1");
+  const e2 = document.getElementById("exacta2");
+  const t1 = document.getElementById("trifecta1");
+  const t2 = document.getElementById("trifecta2");
+  const t3 = document.getElementById("trifecta3");
+
+  if (e1 && !e1.value) e1.value = "1";
+  if (e2 && !e2.value) e2.value = "2";
+  if (t1 && !t1.value) t1.value = "1";
+  if (t2 && !t2.value) t2.value = "2";
+  if (t3 && !t3.value) t3.value = "3";
+
   calculateExactaOdds();
   calculateTrifectaOdds();
 }
