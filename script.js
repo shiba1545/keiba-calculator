@@ -164,11 +164,25 @@ function calculateOddsAndResults() {
       document.getElementById("trifecta1").value = winHorse;
       document.getElementById("trifecta2").value = secondHorse;
       document.getElementById("trifecta3").value = thirdHorse;
-      calculateExactaOdds();
-      calculateTrifectaOdds();
     }
     alert("【結果確定】履歴を更新しました。");
   }
+
+  // 入力枠に値がない場合はデフォルト（1・2・3番）を設定して再計算
+  const e1 = document.getElementById("exacta1");
+  const e2 = document.getElementById("exacta2");
+  const t1 = document.getElementById("trifecta1");
+  const t2 = document.getElementById("trifecta2");
+  const t3 = document.getElementById("trifecta3");
+
+  if (e1 && !e1.value) e1.value = "1";
+  if (e2 && !e2.value) e2.value = "2";
+  if (t1 && !t1.value) t1.value = "1";
+  if (t2 && !t2.value) t2.value = "2";
+  if (t3 && !t3.value) t3.value = "3";
+
+  calculateExactaOdds();
+  calculateTrifectaOdds();
 
   saveData();
   renderTable();
@@ -235,7 +249,7 @@ function resetHistory() {
     setupHorses();
   }
 }
-// レース時点（1〜30回目）を指定して勝率・オッズを切り替える関数
+
 // レース時点（1〜30回目）を指定して勝率・オッズを切り替える関数
 function showHistoryAtRace(raceIndex) {
   raceIndex = parseInt(raceIndex);
