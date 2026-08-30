@@ -29,6 +29,12 @@
         <button class="btn btn-secondary" onclick="assignRandomRanks()">【検証】ランダム着順</button>
         <button class="btn btn-danger" onclick="resetHistory()">履歴リセット</button>
       </div>
+      <div class="input-group" style="margin-top: 15px;">
+        <label for="raceSelector"><strong>表示対象レース: </strong></label>
+        <select id="raceSelector" onchange="showHistoryAtRace(this.value)">
+          <option value="30">30回目（最新）</option>
+        </select>
+      </div>
     </section>
 
     <!-- メインデータテーブル -->
