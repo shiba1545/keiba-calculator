@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>過去成績・出馬表（1〜30回）</title>
+  <title>出馬表 | 横浜サイエンスフロンティア杯</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -15,9 +15,27 @@
       max-width: 600px;
       margin: 0 auto;
       background: #fff;
-      padding: 15px;
+      padding: 20px;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .race-header {
+      border-bottom: 2px solid #002288;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+    .race-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #002288;
+      margin-bottom: 8px;
+    }
+    .race-info {
+      font-size: 14px;
+      color: #555;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
     }
     .controls {
       margin-bottom: 15px;
@@ -27,7 +45,7 @@
     }
     select {
       padding: 8px 12px;
-      font-size: 16px;
+      font-size: 15px;
       border-radius: 4px;
       border: 1px solid #ccc;
     }
@@ -64,8 +82,18 @@
 <body>
 
 <div class="container">
+  <!-- レース見出しエリア -->
+  <div class="race-header">
+    <div class="race-title">第<span id="raceNumDisplay">30</span>回 横浜サイエンスフロンティア杯 出馬予定馬</div>
+    <div class="race-info">
+      <span>開催日: 2026年9月5日</span>
+      <span>天気: ○○</span>
+      <span>コース: 校舎一周 ○○m</span>
+    </div>
+  </div>
+
   <div class="controls">
-    <label for="raceSelect">表示時点：</label>
+    <label for="raceSelect">表示対象：</label>
     <select id="raceSelect" onchange="renderTable()"></select>
   </div>
 
@@ -105,6 +133,10 @@
 
   function renderTable() {
     const raceCount = parseInt(select.value);
+    
+    // タイトルの回数をドロップダウンと連動
+    document.getElementById("raceNumDisplay").innerText = raceCount;
+
     const tbody = document.getElementById("tableBody");
     tbody.innerHTML = "";
 
