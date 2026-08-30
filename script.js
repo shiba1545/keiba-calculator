@@ -235,3 +235,52 @@ function resetHistory() {
     setupHorses();
   }
 }
+// レース時点（1〜30回目）を指定して勝率・オッズを切り替える関数
+function showHistoryAtRace(raceIndex) {
+  raceIndex = parseInt(raceIndex);
+  
+  state.horses.forEach(h => {
+    // 0回目からraceIndex回目までの履歴を取得
+    const sliced = h.history.slice(0, raceIndex);
+    let winCount = 0;
+    let total = 0;
+    
+    sliced.forEach(v => {
+      if (v !== "" && !isNaN(v)) {
+        total++;
+        if (parseInt(v) === 1) winCount++;
+      }
+    });
+
+    // 勝率の再計算
+    const winRate = total > 0 ? winCount / total : 0;
+    h.winRate = winRate;
+
+    // オッズの再計算
+    if (winRate > 0) {
+      const rawOdds = (1 - state.deductionRate) / winRate;
+      let calculated = Math.floor(rawOdds * 10) / 10;
+      if (calculated < 1.0) calculated = 1.0;
+      if (calculated > 99.0) calculated = 99.0;
+      h.odds = calculated;
+    } else {
+      h.odds = 99.0;
+    }
+  });
+
+  renderTable();
+}
+
+// ページ読み込み時にドロップダウンの選択肢（1〜30回目）を自動生成する
+window.addEventListener("DOMContentLoaded", () => {
+  const select = document.getElementById("raceSelector");
+  if (!select) return;
+  select.innerHTML = "";
+  for (let i = 30; i >= 1; i--) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = `${i}回目終了時点`;
+    select.appendChild(opt);
+  }
+  select.value = 30;
+});
