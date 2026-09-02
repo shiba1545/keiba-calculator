@@ -3,6 +3,16 @@ let state = {
   horses: []
 };
 
+// 計算にのみ使用する隠し過去データ（21レース分）
+const extraRaceHistory = [
+  [1, 3, 5, 2, 4, 6], [1, 6, 2, 3, 4, 5], [1, 5, 2, 4, 3, 6], [2, 1, 3, 4, 5, 6],
+  [2, 1, 4, 3, 5, 6], [6, 1, 2, 3, 4, 5], [2, 3, 1, 4, 5, 6], [2, 3, 4, 1, 5, 6],
+  [1, 3, 2, 4, 5, 6], [2, 4, 3, 1, 5, 6], [2, 5, 1, 3, 4, 6], [3, 2, 1, 4, 5, 6],
+  [3, 5, 1, 2, 6, 4], [3, 1, 4, 2, 5, 6], [3, 1, 2, 4, 5, 6], [4, 1, 3, 2, 5, 6],
+  [4, 1, 2, 3, 5, 6], [4, 2, 1, 3, 5, 6], [5, 1, 2, 3, 4, 6], [5, 2, 1, 3, 4, 6],
+  [2, 1, 5, 3, 4, 6]
+];
+
 // 初期表示
 window.onload = function() {
   loadData();
@@ -31,11 +41,7 @@ function saveData() {
 function setupHorses() {
   const raceHistory = [
     [1, 2, 3, 4, 5, 6], [1, 2, 4, 3, 5, 6], [2, 4, 1, 3, 5, 6], [1, 3, 4, 2, 5, 6], [1, 4, 2, 3, 5, 6],
-    [1, 4, 3, 2, 5, 6], [1, 5, 2, 3, 4, 6], [1, 5, 2, 3, 4, 6], [1, 2, 5, 3, 4, 6], [1, 3, 5, 2, 4, 6],
-    [1, 6, 2, 3, 4, 5], [1, 5, 2, 4, 3, 6], [2, 1, 3, 4, 5, 6], [2, 1, 4, 3, 5, 6], [6, 1, 2, 3, 4, 5],
-    [2, 3, 1, 4, 5, 6], [2, 3, 4, 1, 5, 6], [1, 3, 2, 4, 5, 6], [2, 4, 3, 1, 5, 6], [2, 5, 1, 3, 4, 6],
-    [3, 2, 1, 4, 5, 6], [3, 5, 1, 2, 6, 4], [3, 1, 4, 2, 5, 6], [3, 1, 2, 4, 5, 6], [4, 1, 3, 2, 5, 6],
-    [4, 1, 2, 3, 5, 6], [4, 2, 1, 3, 5, 6], [5, 1, 2, 3, 4, 6], [5, 2, 1, 3, 4, 6], [2, 1, 5, 3, 4, 6]
+    [1, 4, 3, 2, 5, 6], [1, 5, 2, 3, 4, 6], [1, 5, 2, 3, 4, 6], [1, 2, 5, 3, 4, 6]
   ];
 
   const count = 6;
@@ -43,7 +49,14 @@ function setupHorses() {
   state.horses = [];
 
   for (let i = 1; i <= count; i++) {
+    // 画面表示用の履歴データ
     const horseHistory = raceHistory.map(race => {
+      const rank = race.indexOf(i) + 1;
+      return rank > 0 ? rank : "";
+    });
+
+    // 計算専用の隠し履歴データ
+    const hiddenHistory = extraRaceHistory.map(race => {
       const rank = race.indexOf(i) + 1;
       return rank > 0 ? rank : "";
     });
@@ -55,7 +68,8 @@ function setupHorses() {
       odds: 99.0,
       userRank: "",
       winRate: 0,
-      history: horseHistory
+      history: horseHistory,
+      hiddenHistory: hiddenHistory
     });
   }
   saveData();
@@ -102,6 +116,15 @@ function calculateOddsAndResults() {
     let winCount = 0;
     let validRaces = 0;
 
+    // 1. 画面非表示の隠しデータを計算に反映
+    (h.hiddenHistory || []).forEach(val => {
+      if (val !== "" && !isNaN(val)) {
+        validRaces++;
+        if (parseInt(val) === 1) winCount++;
+      }
+    });
+
+    // 2. 画面上の履歴データも合算
     h.history.forEach(val => {
       if (val !== "" && !isNaN(val)) {
         validRaces++;
@@ -231,16 +254,23 @@ function resetHistory() {
 function showHistoryAtRace(raceIndex) {
   raceIndex = parseInt(raceIndex);
 
-  // 一番左（0番目）が1回目なので、N回目は raceIndex - 1 番目のインデックス
   const targetRaceIdx = raceIndex - 1;
   let horseStats = [];
 
   state.horses.forEach((h, index) => {
-    // 1回目〜N回目（インデックス 0 〜 raceIndex - 1）までのデータを抽出
     const sliced = h.history.slice(0, raceIndex);
     let winCount = 0;
     let total = 0;
-    
+
+    // 隠しデータの加算
+    (h.hiddenHistory || []).forEach(v => {
+      if (v !== "" && !isNaN(v)) {
+        total++;
+        if (parseInt(v) === 1) winCount++;
+      }
+    });
+
+    // 画面切り替え時点までのデータを加算
     sliced.forEach(v => {
       if (v !== "" && !isNaN(v)) {
         total++;
@@ -266,7 +296,6 @@ function showHistoryAtRace(raceIndex) {
     horseStats.push({ index, oddsForRanking });
   });
 
-  // 人気順位の計算
   let sorted = [...horseStats].sort((a, b) => a.oddsForRanking - b.oddsForRanking);
   let currentRank = 1;
   sorted.forEach((item, i) => {
@@ -276,7 +305,6 @@ function showHistoryAtRace(raceIndex) {
     state.horses[item.index].rank = currentRank + "位";
   });
 
-  // N回目（targetRaceIdx）の実際の着順結果を抽出して自動反映
   let rank1Horse = "", rank2Horse = "", rank3Horse = "";
   state.horses.forEach(h => {
     const rankVal = String(h.history[targetRaceIdx]);
@@ -299,7 +327,6 @@ function showHistoryAtRace(raceIndex) {
 
   renderTable();
 
-  // 反映された馬番に基づき、連勝式オッズと払戻金を計算
   calculateExactaOdds();
   calculateTrifectaOdds();
 }
