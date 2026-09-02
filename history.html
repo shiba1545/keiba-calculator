@@ -28,7 +28,7 @@
       vertical-align: middle;
     }
     
-    /* 枠色スタイル (1〜8枠対応) */
+    /* 枠色スタイル (1〜8枠) */
     .waku-1 { background-color: #ffffff; color: #000; font-weight: bold; }
     .waku-2 { background-color: #222222; color: #fff; font-weight: bold; }
     .waku-3 { background-color: #e53935; color: #fff; font-weight: bold; }
@@ -38,7 +38,7 @@
     .waku-7 { background-color: #fb8c00; color: #fff; font-weight: bold; }
     .waku-8 { background-color: #f48fb1; color: #fff; font-weight: bold; }
 
-    /* 馬名リンク風カラー */
+    /* 馬名スタイル */
     .horse-name {
       font-weight: bold;
       color: #000080;
@@ -46,7 +46,7 @@
       padding-left: 8px !important;
     }
 
-    /* セレクトボックス・ボタン周り */
+    /* 操作パネル */
     .control-panel {
       display: flex;
       align-items: center;
@@ -103,6 +103,16 @@
 
   <script src="script.js"></script>
   <script>
+    // 追加の21レース隠しデータ
+    const extraRaceHistory = [
+      [1, 3, 5, 2, 4, 6], [1, 6, 2, 3, 4, 5], [1, 5, 2, 4, 3, 6], [2, 1, 3, 4, 5, 6],
+      [2, 1, 4, 3, 5, 6], [6, 1, 2, 3, 4, 5], [2, 3, 1, 4, 5, 6], [2, 3, 4, 1, 5, 6],
+      [1, 3, 2, 4, 5, 6], [2, 4, 3, 1, 5, 6], [2, 5, 1, 3, 4, 6], [3, 2, 1, 4, 5, 6],
+      [3, 5, 1, 2, 6, 4], [3, 1, 4, 2, 5, 6], [3, 1, 2, 4, 5, 6], [4, 1, 3, 2, 5, 6],
+      [4, 1, 2, 3, 5, 6], [4, 2, 1, 3, 5, 6], [5, 1, 2, 3, 4, 6], [5, 2, 1, 3, 4, 6],
+      [2, 1, 5, 3, 4, 6]
+    ];
+
     // ダミーの性齢・斤量データ（6頭分）
     const horseDetails = [
       { sexAge: "牡4", weight: "58.0" },
@@ -114,6 +124,11 @@
     ];
 
     window.addEventListener('DOMContentLoaded', () => {
+      // データの初期化チェック＆隠し履歴の保証
+      if (!state.horses || state.horses.length === 0) {
+        setupHorses();
+      }
+
       const select = document.getElementById('raceSelect');
       if (select) {
         select.innerHTML = '';
@@ -129,8 +144,48 @@
     });
 
     function changeRace(raceIndex) {
-      showHistoryAtRace(raceIndex);
+      calculateRaceDisplay(raceIndex);
       renderShutubaTable();
+    }
+
+    // N回目時点の勝率・オッズを21レース分含めて計算
+    function calculateRaceDisplay(raceIndex) {
+      raceIndex = parseInt(raceIndex);
+      const deductionRate = state.deductionRate || 0.25;
+
+      state.horses.forEach((h, i) => {
+        let winCount = 0;
+        let total = 0;
+
+        // 1. 追加21レース分の隠しデータを合算
+        extraRaceHistory.forEach(race => {
+          const rank = race.indexOf(h.num) + 1;
+          if (rank > 0) {
+            total++;
+            if (rank === 1) winCount++;
+          }
+        });
+
+        // 2. 指定されたN回目までの履歴を合算
+        const sliced = (h.history || []).slice(0, raceIndex);
+        sliced.forEach(v => {
+          if (v !== "" && !isNaN(v)) {
+            total++;
+            if (parseInt(v) === 1) winCount++;
+          }
+        });
+
+        const winRate = total > 0 ? winCount / total : 0;
+        h.winRate = winRate;
+
+        if (winRate > 0) {
+          let rawOdds = (1 - deductionRate) / winRate;
+          let calculated = Math.floor(rawOdds * 10) / 10;
+          h.odds = Math.min(Math.max(calculated, 1.0), 99.0);
+        } else {
+          h.odds = 99.0;
+        }
+      });
     }
 
     function renderShutubaTable() {
@@ -142,7 +197,6 @@
 
       state.horses.forEach((h, i) => {
         const tr = document.createElement('tr');
-        // 枠番計算（6頭立ての場合は 1頭1枠）
         const wakuNum = i + 1;
         const wakuClass = wakuClasses[i % 8];
         const detail = horseDetails[i] || { sexAge: "牡4", weight: "58.0" };
