@@ -27,7 +27,7 @@
       vertical-align: middle;
     }
     
-    /* 馬番に適用する枠色スタイル */
+    /* 馬番の枠色スタイル */
     .waku-1 { background-color: #ffffff; color: #000; font-weight: bold; }
     .waku-2 { background-color: #222222; color: #fff; font-weight: bold; }
     .waku-3 { background-color: #e53935; color: #fff; font-weight: bold; }
@@ -80,7 +80,7 @@
     <div class="table-container">
       <table class="shutuba-table">
         <thead>
-          <tr>
+          <tr id="tableHeader">
             <th style="width: 45px;">馬番</th>
             <th style="width: 50px;">印</th>
             <th>馬名</th>
@@ -97,15 +97,15 @@
 
   <script>
     // ==========================================
-    // ★ ここで馬名を簡単に変更できます（1番〜6番）
+    // 馬名の設定（1番〜6番）
     // ==========================================
     const horseNames = [
-      "トウカイテイオー", // 1番馬の名称
-      "馬番2", // 2番馬の名称
-      "馬番3", // 3番馬の名称
-      "馬番4", // 4番馬の名称
-      "馬番5", // 5番馬の名称
-      "馬番6"  // 6番馬の名称
+      "トウカイテイオー",
+      "馬番2",
+      "馬番3",
+      "馬番4",
+      "馬番5",
+      "馬番6"
     ];
 
     window.state = window.state || { deductionRate: 0.25, horses: [] };
@@ -159,6 +159,7 @@
       }
     });
 
+    // 選択肢を変更した時は元の馬番順の出馬表に戻す
     function changeRace(raceIndex) {
       calculateRaceDisplay(raceIndex);
       renderShutubaTable();
@@ -172,7 +173,6 @@
         let winCount = 0;
         let total = 0;
 
-        // 1. 追加21レース分の合算
         extraRaceHistory.forEach(race => {
           const rank = race.indexOf(h.num) + 1;
           if (rank > 0) {
@@ -181,7 +181,6 @@
           }
         });
 
-        // 2. 選択回数時点までの合算
         const sliced = (h.history || []).slice(0, raceIndex - 1);
         sliced.forEach(v => {
           if (v !== "" && !isNaN(v)) {
@@ -203,16 +202,26 @@
       });
     }
 
+    // 馬番順の通常表示
     function renderShutubaTable() {
+      // ヘッダーを通常に戻す
+      document.getElementById('tableHeader').innerHTML = `
+        <th style="width: 45px;">馬番</th>
+        <th style="width: 50px;">印</th>
+        <th>馬名</th>
+        <th style="width: 70px;">勝率</th>
+        <th style="width: 70px;">オッズ</th>
+      `;
+
       const tbody = document.getElementById('shutubaTableBody');
       if (!tbody) return;
       tbody.innerHTML = '';
 
       const wakuClasses = ['waku-1', 'waku-2', 'waku-3', 'waku-4', 'waku-5', 'waku-6', 'waku-7', 'waku-8'];
 
-      state.horses.forEach((h, i) => {
+      state.horses.forEach((h) => {
         const tr = document.createElement('tr');
-        const wakuClass = wakuClasses[i % 8];
+        const wakuClass = wakuClasses[(h.num - 1) % 8];
 
         tr.innerHTML = `
           <td class="${wakuClass}">${h.num}</td>
@@ -225,21 +234,49 @@
       });
     }
 
+    // 「結果表示」ボタンで1着からの着順順に並び替え
     function showCurrentRaceResult() {
       const raceSelect = document.getElementById('raceSelect');
       const selectedRace = parseInt(raceSelect.value);
       const targetIdx = selectedRace - 1;
 
-      let rank1 = "-", rank2 = "-", rank3 = "-";
+      // 該当レースの着順データを付与してソート
+      const resultList = state.horses.map(h => {
+        const rank = parseInt(h.history[targetIdx]) || 99;
+        return { ...h, currentRank: rank };
+      }).sort((a, b) => a.currentRank - b.currentRank);
 
-      state.horses.forEach(h => {
-        const r = String(h.history[targetIdx]);
-        if (r === "1") rank1 = `馬番${h.num} (${h.name})`;
-        if (r === "2") rank2 = `馬番${h.num} (${h.name})`;
-        if (r === "3") rank3 = `馬番${h.num} (${h.name})`;
+      // ヘッダーに「着順」列を追加
+      document.getElementById('tableHeader').innerHTML = `
+        <th style="width: 45px;">着順</th>
+        <th style="width: 45px;">馬番</th>
+        <th style="width: 50px;">印</th>
+        <th>馬名</th>
+        <th style="width: 70px;">勝率</th>
+        <th style="width: 70px;">オッズ</th>
+      `;
+
+      const tbody = document.getElementById('shutubaTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const wakuClasses = ['waku-1', 'waku-2', 'waku-3', 'waku-4', 'waku-5', 'waku-6', 'waku-7', 'waku-8'];
+
+      resultList.forEach((h) => {
+        const tr = document.createElement('tr');
+        const wakuClass = wakuClasses[(h.num - 1) % 8];
+        const rankDisplay = h.currentRank <= 6 ? `${h.currentRank}着` : '-';
+
+        tr.innerHTML = `
+          <td style="font-weight: bold; color: #d32f2f;">${rankDisplay}</td>
+          <td class="${wakuClass}">${h.num}</td>
+          <td><button style="padding: 2px 6px; font-size: 0.8rem; background: #f0f0f0; border: 1px solid #ccc; border-radius: 3px;">--</button></td>
+          <td class="horse-name">${h.name}</td>
+          <td>${(h.winRate * 100).toFixed(1)}%</td>
+          <td style="font-weight: bold;">${h.odds.toFixed(1)}</td>
+        `;
+        tbody.appendChild(tr);
       });
-
-      alert(`【第${selectedRace}回 レース結果】\n\n🥇 1着: ${rank1}\n🥈 2着: ${rank2}\n🥉 3着: ${rank3}`);
     }
   </script>
 </body>
