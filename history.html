@@ -6,17 +6,58 @@
   <title>出馬表 | 横浜サイエンスフロンティア杯</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* 出馬表固有の枠線カラー定義 */
-    .waku-1 { background-color: #ffffff; color: #000000; border: 1px solid #ccc; }
-    .waku-2 { background-color: #222222; color: #ffffff; }
-    .waku-3 { background-color: #e53935; color: #ffffff; }
-    .waku-4 { background-color: #1e88e5; color: #ffffff; }
-    .waku-5 { background-color: #fdd835; color: #000000; }
-    .waku-6 { background-color: #43a047; color: #ffffff; }
-    
-    .waku-cell {
+    /* netkeiba風の出馬表スタイル */
+    .shutuba-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      background-color: #fff;
+    }
+    .shutuba-table th {
+      background-color: #f2f2f2;
+      color: #333;
       font-weight: bold;
-      width: 40px;
+      border: 1px solid #ccc;
+      padding: 6px 4px;
+      text-align: center;
+    }
+    .shutuba-table td {
+      border: 1px solid #e0e0e0;
+      padding: 6px 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    
+    /* 枠色スタイル (1〜8枠対応) */
+    .waku-1 { background-color: #ffffff; color: #000; font-weight: bold; }
+    .waku-2 { background-color: #222222; color: #fff; font-weight: bold; }
+    .waku-3 { background-color: #e53935; color: #fff; font-weight: bold; }
+    .waku-4 { background-color: #1e88e5; color: #fff; font-weight: bold; }
+    .waku-5 { background-color: #fdd835; color: #000; font-weight: bold; }
+    .waku-6 { background-color: #43a047; color: #fff; font-weight: bold; }
+    .waku-7 { background-color: #fb8c00; color: #fff; font-weight: bold; }
+    .waku-8 { background-color: #f48fb1; color: #fff; font-weight: bold; }
+
+    /* 馬名リンク風カラー */
+    .horse-name {
+      font-weight: bold;
+      color: #000080;
+      text-align: left;
+      padding-left: 8px !important;
+    }
+
+    /* セレクトボックス・ボタン周り */
+    .control-panel {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    select, button {
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 0.9rem;
     }
   </style>
 </head>
@@ -28,13 +69,11 @@
 
   <div class="container">
     <div class="config-card">
-      <h2>第1回 横浜サイエンスフロンティア杯 出馬予定馬</h2>
-      <p style="color: #666; font-size: 0.9rem;">開催日: 2026年9月5日 天気: 〇〇 コース: 校舎一周 〇〇m</p>
-      <hr style="border: 0; border-top: 1px solid #eee; margin: 1rem 0;">
+      <h2 style="font-size: 1.2rem; margin-bottom: 4px;">第1回 横浜サイエンスフロンティア杯(2026年9月5日 GI 東京 芝1600m) 枠順</h2>
       
-      <div class="input-group" style="display: flex; align-items: center; gap: 8px;">
+      <div class="control-panel">
         <label for="raceSelect"><strong>表示: </strong></label>
-        <select id="raceSelect" onchange="changeRace(this.value)" style="padding: 6px 12px; border-radius: 4px; border: 1px solid #ccc;">
+        <select id="raceSelect" onchange="changeRace(this.value)">
           <!-- JSで自動生成 -->
         </select>
         <button id="btnShowResult" class="btn btn-secondary" onclick="showCurrentRaceResult()">結果表示</button>
@@ -42,14 +81,17 @@
     </div>
 
     <div class="table-container">
-      <table>
+      <table class="shutuba-table">
         <thead>
           <tr>
-            <th>枠</th>
-            <th>馬番</th>
+            <th style="width: 35px;">枠</th>
+            <th style="width: 40px;">馬番</th>
+            <th style="width: 50px;">印</th>
             <th>馬名</th>
-            <th>勝率</th>
-            <th>オッズ</th>
+            <th style="width: 50px;">性齢</th>
+            <th style="width: 50px;">斤量</th>
+            <th style="width: 70px;">勝率</th>
+            <th style="width: 70px;">オッズ</th>
           </tr>
         </thead>
         <tbody id="shutubaTableBody">
@@ -61,7 +103,16 @@
 
   <script src="script.js"></script>
   <script>
-    // ページ読み込み時に1回目時点を表示
+    // ダミーの性齢・斤量データ（6頭分）
+    const horseDetails = [
+      { sexAge: "牡4", weight: "58.0" },
+      { sexAge: "牝5", weight: "56.0" },
+      { sexAge: "牡5", weight: "58.0" },
+      { sexAge: "牡4", weight: "58.0" },
+      { sexAge: "牝5", weight: "56.0" },
+      { sexAge: "牡6", weight: "58.0" }
+    ];
+
     window.addEventListener('DOMContentLoaded', () => {
       const select = document.getElementById('raceSelect');
       if (select) {
@@ -87,18 +138,24 @@
       if (!tbody) return;
       tbody.innerHTML = '';
 
-      const wakuClasses = ['waku-1', 'waku-2', 'waku-3', 'waku-4', 'waku-5', 'waku-6'];
+      const wakuClasses = ['waku-1', 'waku-2', 'waku-3', 'waku-4', 'waku-5', 'waku-6', 'waku-7', 'waku-8'];
 
       state.horses.forEach((h, i) => {
         const tr = document.createElement('tr');
-        const wakuClass = wakuClasses[i % 6];
+        // 枠番計算（6頭立ての場合は 1頭1枠）
+        const wakuNum = i + 1;
+        const wakuClass = wakuClasses[i % 8];
+        const detail = horseDetails[i] || { sexAge: "牡4", weight: "58.0" };
 
         tr.innerHTML = `
-          <td class="waku-cell ${wakuClass}">${i + 1}</td>
-          <td>${h.num}</td>
-          <td style="font-weight: bold; text-align: left; padding-left: 1rem;">${h.name}</td>
+          <td class="${wakuClass}">${wakuNum}</td>
+          <td style="font-weight: bold;">${h.num}</td>
+          <td><button style="padding: 2px 6px; font-size: 0.8rem; background: #f0f0f0; border: 1px solid #ccc; border-radius: 3px;">--</button></td>
+          <td class="horse-name">${h.name}</td>
+          <td>${detail.sexAge}</td>
+          <td>${detail.weight}</td>
           <td>${(h.winRate * 100).toFixed(1)}%</td>
-          <td>${h.odds.toFixed(1)}</td>
+          <td style="font-weight: bold;">${h.odds.toFixed(1)}</td>
         `;
         tbody.appendChild(tr);
       });
