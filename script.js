@@ -3,7 +3,7 @@ let state = {
   horses: []
 };
 
-// 計算にのみ使用する隠し過去データ（21レース分）
+// 計算専用の追加21レースデータ（非表示）
 const extraRaceHistory = [
   [1, 3, 5, 2, 4, 6], [1, 6, 2, 3, 4, 5], [1, 5, 2, 4, 3, 6], [2, 1, 3, 4, 5, 6],
   [2, 1, 4, 3, 5, 6], [6, 1, 2, 3, 4, 5], [2, 3, 1, 4, 5, 6], [2, 3, 4, 1, 5, 6],
@@ -16,7 +16,9 @@ const extraRaceHistory = [
 // 初期表示
 window.onload = function() {
   loadData();
-  renderTable();
+  if (document.getElementById("horseTableBody")) {
+    renderTable();
+  }
 };
 
 // データロード
@@ -24,8 +26,10 @@ function loadData() {
   const saved = localStorage.getItem("keiba_data");
   if (saved) {
     state = JSON.parse(saved);
-    document.getElementById("deductionRate").value = state.deductionRate;
-    document.getElementById("horseCount").value = state.horses.length;
+    const deductionElem = document.getElementById("deductionRate");
+    const countElem = document.getElementById("horseCount");
+    if (deductionElem) deductionElem.value = state.deductionRate;
+    if (countElem) countElem.value = state.horses.length;
   } else {
     setupHorses();
   }
@@ -33,7 +37,10 @@ function loadData() {
 
 // データ保存
 function saveData() {
-  state.deductionRate = parseFloat(document.getElementById("deductionRate").value) || 0.25;
+  const deductionElem = document.getElementById("deductionRate");
+  if (deductionElem) {
+    state.deductionRate = parseFloat(deductionElem.value) || 0.25;
+  }
   localStorage.setItem("keiba_data", JSON.stringify(state));
 }
 
@@ -45,17 +52,17 @@ function setupHorses() {
   ];
 
   const count = 6;
-  document.getElementById("horseCount").value = count;
+  const countElem = document.getElementById("horseCount");
+  if (countElem) countElem.value = count;
+  
   state.horses = [];
 
   for (let i = 1; i <= count; i++) {
-    // 画面表示用の履歴データ
     const horseHistory = raceHistory.map(race => {
       const rank = race.indexOf(i) + 1;
       return rank > 0 ? rank : "";
     });
 
-    // 計算専用の隠し履歴データ
     const hiddenHistory = extraRaceHistory.map(race => {
       const rank = race.indexOf(i) + 1;
       return rank > 0 ? rank : "";
@@ -73,12 +80,15 @@ function setupHorses() {
     });
   }
   saveData();
-  renderTable();
+  if (document.getElementById("horseTableBody")) {
+    renderTable();
+  }
 }
 
-// テーブル描画
+// テーブル描画 (index.html用)
 function renderTable() {
   const tbody = document.getElementById("horseTableBody");
+  if (!tbody) return;
   tbody.innerHTML = "";
 
   state.horses.forEach((h, index) => {
@@ -107,7 +117,8 @@ function updateUserRank(index, val) { state.horses[index].userRank = val; saveDa
 
 // 計算＆確定
 function calculateOddsAndResults() {
-  const deductionRate = parseFloat(document.getElementById("deductionRate").value);
+  const deductionElem = document.getElementById("deductionRate");
+  const deductionRate = deductionElem ? parseFloat(deductionElem.value) : 0.25;
   state.deductionRate = deductionRate;
 
   let horseStats = [];
@@ -116,7 +127,6 @@ function calculateOddsAndResults() {
     let winCount = 0;
     let validRaces = 0;
 
-    // 1. 画面非表示の隠しデータを計算に反映
     (h.hiddenHistory || []).forEach(val => {
       if (val !== "" && !isNaN(val)) {
         validRaces++;
@@ -124,7 +134,6 @@ function calculateOddsAndResults() {
       }
     });
 
-    // 2. 画面上の履歴データも合算
     h.history.forEach(val => {
       if (val !== "" && !isNaN(val)) {
         validRaces++;
@@ -174,11 +183,17 @@ function calculateOddsAndResults() {
     });
 
     if (secondHorse !== "") {
-      document.getElementById("exacta1").value = winHorse;
-      document.getElementById("exacta2").value = secondHorse;
-      document.getElementById("trifecta1").value = winHorse;
-      document.getElementById("trifecta2").value = secondHorse;
-      document.getElementById("trifecta3").value = thirdHorse;
+      const ex1 = document.getElementById("exacta1");
+      const ex2 = document.getElementById("exacta2");
+      const tf1 = document.getElementById("trifecta1");
+      const tf2 = document.getElementById("trifecta2");
+      const tf3 = document.getElementById("trifecta3");
+
+      if (ex1) ex1.value = winHorse;
+      if (ex2) ex2.value = secondHorse;
+      if (tf1) tf1.value = winHorse;
+      if (tf2) tf2.value = secondHorse;
+      if (tf3) tf3.value = thirdHorse;
     }
     alert("【結果確定】履歴を更新しました。");
   }
@@ -192,8 +207,12 @@ function calculateOddsAndResults() {
 
 // 馬単計算
 function calculateExactaOdds() {
-  const p1_num = document.getElementById("exacta1").value;
-  const p2_num = document.getElementById("exacta2").value;
+  const ex1 = document.getElementById("exacta1");
+  const ex2 = document.getElementById("exacta2");
+  if (!ex1 || !ex2) return;
+
+  const p1_num = ex1.value;
+  const p2_num = ex2.value;
   const h1 = state.horses.find(h => String(h.num) === p1_num);
   const h2 = state.horses.find(h => String(h.num) === p2_num);
 
@@ -203,15 +222,22 @@ function calculateExactaOdds() {
   let odds = prob > 0 ? Math.floor(((1 - state.deductionRate) / prob) * 10) / 10 : 256.0;
   odds = Math.min(Math.max(odds, 1.0), 256.0);
 
-  document.getElementById("exactaOddsText").innerText = odds.toFixed(1);
-  document.getElementById("exactaPayoutText").innerText = Math.floor(odds * 5000).toLocaleString();
+  const oddsTxt = document.getElementById("exactaOddsText");
+  const payTxt = document.getElementById("exactaPayoutText");
+  if (oddsTxt) oddsTxt.innerText = odds.toFixed(1);
+  if (payTxt) payTxt.innerText = Math.floor(odds * 5000).toLocaleString();
 }
 
 // 3連単計算
 function calculateTrifectaOdds() {
-  const p1_num = document.getElementById("exacta1").value;
-  const p2_num = document.getElementById("exacta2").value;
-  const p3_num = document.getElementById("trifecta3").value;
+  const ex1 = document.getElementById("exacta1");
+  const ex2 = document.getElementById("exacta2");
+  const tf3 = document.getElementById("trifecta3");
+  if (!ex1 || !ex2 || !tf3) return;
+
+  const p1_num = ex1.value;
+  const p2_num = ex2.value;
+  const p3_num = tf3.value;
 
   const h1 = state.horses.find(h => String(h.num) === p1_num);
   const h2 = state.horses.find(h => String(h.num) === p2_num);
@@ -229,8 +255,10 @@ function calculateTrifectaOdds() {
   let odds = prob > 0 ? Math.floor(((1 - state.deductionRate) / prob) * 10) / 10 : 512.0;
   odds = Math.min(Math.max(odds, 1.0), 512.0);
 
-  document.getElementById("trifectaOddsText").innerText = odds.toFixed(1);
-  document.getElementById("trifectaPayoutText").innerText = Math.floor(odds * 5000).toLocaleString();
+  const oddsTxt = document.getElementById("trifectaOddsText");
+  const payTxt = document.getElementById("trifectaPayoutText");
+  if (oddsTxt) oddsTxt.innerText = odds.toFixed(1);
+  if (payTxt) payTxt.innerText = Math.floor(odds * 5000).toLocaleString();
 }
 
 function assignRandomRanks() {
@@ -250,10 +278,9 @@ function resetHistory() {
   }
 }
 
-// N回目終了時点の切り替え関数
+// N回目終了時点の切り替え関数 (history.html・index.html 共通)
 function showHistoryAtRace(raceIndex) {
   raceIndex = parseInt(raceIndex);
-
   const targetRaceIdx = raceIndex - 1;
   let horseStats = [];
 
@@ -262,7 +289,7 @@ function showHistoryAtRace(raceIndex) {
     let winCount = 0;
     let total = 0;
 
-    // 隠しデータの加算
+    // 隠しデータの計算反映
     (h.hiddenHistory || []).forEach(v => {
       if (v !== "" && !isNaN(v)) {
         total++;
@@ -270,7 +297,7 @@ function showHistoryAtRace(raceIndex) {
       }
     });
 
-    // 画面切り替え時点までのデータを加算
+    // 表示切り替え時点までのデータ反映
     sliced.forEach(v => {
       if (v !== "" && !isNaN(v)) {
         total++;
@@ -313,34 +340,28 @@ function showHistoryAtRace(raceIndex) {
     if (rankVal === "3") rank3Horse = String(h.num);
   });
 
+  const ex1 = document.getElementById("exacta1");
+  const ex2 = document.getElementById("exacta2");
+  const tf1 = document.getElementById("trifecta1");
+  const tf2 = document.getElementById("trifecta2");
+  const tf3 = document.getElementById("trifecta3");
+
   if (rank1Horse) {
-    document.getElementById("exacta1").value = rank1Horse;
-    document.getElementById("trifecta1").value = rank1Horse;
+    if (ex1) ex1.value = rank1Horse;
+    if (tf1) tf1.value = rank1Horse;
   }
   if (rank2Horse) {
-    document.getElementById("exacta2").value = rank2Horse;
-    document.getElementById("trifecta2").value = rank2Horse;
+    if (ex2) ex2.value = rank2Horse;
+    if (tf2) tf2.value = rank2Horse;
   }
   if (rank3Horse) {
-    document.getElementById("trifecta3").value = rank3Horse;
+    if (tf3) tf3.value = rank3Horse;
   }
 
-  renderTable();
+  if (document.getElementById("horseTableBody")) {
+    renderTable();
+  }
 
   calculateExactaOdds();
   calculateTrifectaOdds();
 }
-
-// ドロップダウン生成
-window.addEventListener("DOMContentLoaded", () => {
-  const select = document.getElementById("raceSelector");
-  if (!select) return;
-  select.innerHTML = "";
-  for (let i = 30; i >= 1; i--) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = `${i}回目終了時点`;
-    select.appendChild(opt);
-  }
-  select.value = 30;
-});
