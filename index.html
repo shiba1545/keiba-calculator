@@ -6,7 +6,6 @@
   <title>競馬オッズ・着順計算システム</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* 追加スタイル */
     .odds-box-container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -52,7 +51,7 @@
     <div class="config-card">
       <div>
         <label>控除率 (例: 0.25) : </label>
-        <input type="number" id="deductionRate" value="0.25" step="0.01" style="width: 70px;">
+        <input type="number" id="deductionRate" value="0.25" step="0.01" style="width: 70px;" onchange="calculateAll()">
         &nbsp;&nbsp;
         <label>出走頭数: </label>
         <input type="number" id="horseCount" value="6" min="2" max="18" style="width: 50px;">
@@ -77,14 +76,14 @@
     <div class="table-container">
       <table id="mainTable">
         <thead>
-          <tr>
+          <tr id="tableHeaderRow">
             <th>馬番</th>
             <th>馬名</th>
             <th>順位</th>
             <th>単勝オッズ</th>
             <th>着順入力</th>
             <th>勝率</th>
-            <th id="historyHeader">過去履歴</th>
+            <!-- 履歴列が動的追加されます -->
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -102,9 +101,9 @@
         <div class="odds-card">
           <h3>単勝</h3>
           <div class="select-row">
-            <label>馬番</label>
+            <label>馬番:</label>
             <select id="tanHorse" onchange="calculateOddsSection()">
-              <!-- JSで生成 -->
+              <!-- JSで動的生成 -->
             </select>
           </div>
           <div class="result-row">適正オッズ: <span id="tanOdds">---</span> 倍</div>
@@ -115,10 +114,8 @@
         <div class="odds-card">
           <h3>2連単（馬単）</h3>
           <div class="select-row">
-            <label>馬番</label>
             <select id="niren1" onchange="calculateOddsSection()"></select>
             <span>→</span>
-            <label>馬番</label>
             <select id="niren2" onchange="calculateOddsSection()"></select>
           </div>
           <div class="result-row">適正オッズ: <span id="nirenOdds">---</span> 倍</div>
@@ -143,29 +140,196 @@
   </div>
 
   <script>
-    // JS側で勝率データを保持し、単勝・馬単・3連単の適正オッズと払戻額（5,000円）をリアルタイム計算する処理
+    const horseNames = ["トウカイテイオー", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"];
+
+    let state = {
+      deductionRate: 0.25,
+      horseCount: 6,
+      horses: [],
+      historyRaces: [] // 過去の着順履歴
+    };
+
+    function init() {
+      state.horses = [];
+      for (let i = 1; i <= state.horseCount; i++) {
+        state.horses.push({
+          num: i,
+          name: horseNames[i - 1] || `馬番${i}`,
+          rankInput: "",
+          winRate: 0,
+          odds: 99.0,
+          rank: "-"
+        });
+      }
+      renderTable();
+      updateSelectOptions();
+    }
+
+    function updateHorseCount() {
+      const count = parseInt(document.getElementById('horseCount').value);
+      if (count >= 2 && count <= 18) {
+        state.horseCount = count;
+        init();
+      }
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      state.horses.forEach((h, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${h.num}</td>
+          <td>${h.name}</td>
+          <td>${h.rank}</td>
+          <td>${h.odds.toFixed(1)}</td>
+          <td><input type="number" min="1" max="${state.horseCount}" value="${h.rankInput}" onchange="updateRank(${index}, this.value)"></td>
+          <td>${(h.winRate * 100).toFixed(1)}%</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateRank(index, val) {
+      state.horses[index].rankInput = val;
+    }
+
+    function calculateAll() {
+      const deduction = parseFloat(document.getElementById('deductionRate').value) || 0.25;
+      
+      // 着順に基づく勝率・オッズ計算
+      let validInputs = state.horses.filter(h => h.rankInput !== "");
+      let totalHorses = state.horses.length;
+
+      state.horses.forEach(h => {
+        let rankVal = parseInt(h.rankInput);
+        if (!isNaN(rankVal) && rankVal > 0) {
+          h.winRate = (totalHorses - rankVal + 1) / ((totalHorses * (totalHorses + 1)) / 2);
+          let rawOdds = (1 - deduction) / h.winRate;
+          h.odds = Math.min(Math.max(Math.floor(rawOdds * 10) / 10, 1.0), 99.0);
+        } else {
+          h.winRate = 0;
+          h.odds = 99.0;
+        }
+      });
+
+      renderTable();
+      calculateOddsSection();
+    }
+
+    function calculateAndConfirm() {
+      calculateAll();
+      // レース結果として履歴に保存
+      const currentRanks = state.horses.map(h => h.rankInput);
+      state.historyRaces.push(currentRanks);
+      updateHistorySelect();
+    }
+
+    function generateRandomRanks() {
+      let nums = Array.from({length: state.horseCount}, (_, i) => i + 1);
+      nums.sort(() => Math.random() - 0.5);
+      state.horses.forEach((h, i) => {
+        h.rankInput = nums[i];
+      });
+      calculateAll();
+    }
+
+    function resetHistory() {
+      state.historyRaces = [];
+      init();
+    }
+
+    function updateHistorySelect() {
+      const select = document.getElementById('historySelect');
+      select.innerHTML = '<option value="">選択してください</option>';
+      state.historyRaces.forEach((_, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `第${idx + 1}回`;
+        select.appendChild(opt);
+      });
+    }
+
+    function loadSelectedHistory() {
+      const idx = document.getElementById('historySelect').value;
+      if (idx !== "") {
+        const race = state.historyRaces[idx];
+        state.horses.forEach((h, i) => {
+          h.rankInput = race[i] || "";
+        });
+        calculateAll();
+      }
+    }
+
+    function updateSelectOptions() {
+      const ids = ['tanHorse', 'niren1', 'niren2', 'sanren1', 'sanren2', 'sanren3'];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = '';
+        state.horses.forEach(h => {
+          const opt = document.createElement('option');
+          opt.value = h.num;
+          opt.textContent = `${h.num}番 (${h.name})`;
+          el.appendChild(opt);
+        });
+      });
+    }
+
     function calculateOddsSection() {
       const deduction = parseFloat(document.getElementById('deductionRate').value) || 0.25;
-      const refundBase = 5000;
 
-      // 各馬の勝率取得（state.horses等のデータ構造に合わせる）
-      const winRates = state.horses.map(h => h.winRate || 0);
-
-      // 1. 単勝計算
-      const tanNum = parseInt(document.getElementById('tanHorse').value) - 1;
-      if (winRates[tanNum] > 0) {
-        const tanWinRate = winRates[tanNum];
-        const tanOdds = ((1 - deduction) / tanWinRate).toFixed(1);
-        const tanPay = Math.floor(refundBase * tanOdds);
+      // 1. 単勝
+      const tanNum = parseInt(document.getElementById('tanHorse').value);
+      const tanHorse = state.horses.find(h => h.num === tanNum);
+      if (tanHorse && tanHorse.winRate > 0) {
+        const tanOdds = ((1 - deduction) / tanHorse.winRate).toFixed(1);
         document.getElementById('tanOdds').textContent = tanOdds;
-        document.getElementById('tanPay').textContent = tanPay.toLocaleString();
+        document.getElementById('tanPay').textContent = Math.floor(5000 * tanOdds).toLocaleString();
       } else {
         document.getElementById('tanOdds').textContent = '---';
         document.getElementById('tanPay').textContent = '---';
       }
 
-      // 2連単・3連単も同様に計算を更新...
+      // 2. 2連単
+      const n1 = parseInt(document.getElementById('niren1').value);
+      const n2 = parseInt(document.getElementById('niren2').value);
+      const h1 = state.horses.find(h => h.num === n1);
+      const h2 = state.horses.find(h => h.num === n2);
+
+      if (h1 && h2 && n1 !== n2 && h1.winRate > 0 && h2.winRate > 0) {
+        let prob = h1.winRate * (h2.winRate / (1 - h1.winRate));
+        let odds = ((1 - deduction) / prob).toFixed(1);
+        document.getElementById('nirenOdds').textContent = odds;
+        document.getElementById('nirenPay').textContent = Math.floor(5000 * odds).toLocaleString();
+      } else {
+        document.getElementById('nirenOdds').textContent = '---';
+        document.getElementById('nirenPay').textContent = '---';
+      }
+
+      // 3. 3連単
+      const s1 = parseInt(document.getElementById('sanren1').value);
+      const s2 = parseInt(document.getElementById('sanren2').value);
+      const s3 = parseInt(document.getElementById('sanren3').value);
+      const sh1 = state.horses.find(h => h.num === s1);
+      const sh2 = state.horses.find(h => h.num === s2);
+      const sh3 = state.horses.find(h => h.num === s3);
+
+      if (sh1 && sh2 && sh3 && s1 !== s2 && s2 !== s3 && s1 !== s3 && sh1.winRate > 0) {
+        let prob = sh1.winRate * (sh2.winRate / (1 - sh1.winRate)) * (sh3.winRate / (1 - sh1.winRate - sh2.winRate));
+        let odds = ((1 - deduction) / prob).toFixed(1);
+        document.getElementById('sanrenOdds').textContent = odds;
+        document.getElementById('sanrenPay').textContent = Math.floor(5000 * odds).toLocaleString();
+      } else {
+        document.getElementById('sanrenOdds').textContent = '---';
+        document.getElementById('sanrenPay').textContent = '---';
+      }
     }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      init();
+    });
   </script>
 </body>
 </html>
