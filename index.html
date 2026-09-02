@@ -3,53 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>競馬オッズ・着順計算ツール</title>
+  <title>競馬オッズ・着順計算システム</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .odds-box-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .odds-card {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 15px;
+    }
+    .odds-card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+      border-bottom: 2px solid #4cae4c;
+      padding-bottom: 4px;
+    }
+    .select-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .select-row select {
+      padding: 4px 8px;
+      font-size: 0.95rem;
+    }
+    .result-row {
+      font-weight: bold;
+      margin-top: 6px;
+    }
+  </style>
 </head>
 <body>
 
   <header>
-    <h1>競馬オッズ・着順計算ツール</h1>
+    <h1>競馬オッズ・着順計算システム</h1>
   </header>
 
   <div class="container">
     <div class="config-card">
-      <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-        <div>
-          <label>控除率: </label>
-          <input type="number" id="deductionRate" value="0.25" step="0.01" style="width: 60px;" onchange="calculateAll()">
-        </div>
-        <div>
-          <label>出走頭数: </label>
-          <input type="number" id="horseCount" value="6" min="2" max="18" style="width: 50px;">
-        </div>
-        <div>
-          <label>表示切替: </label>
-          <select id="historySelect" onchange="calculateAll()">
-            <option value="all">全表示</option>
-          </select>
-        </div>
+      <div>
+        <label>控除率 (例: 0.25) : </label>
+        <input type="number" id="deductionRate" value="0.25" step="0.01" style="width: 70px;" onchange="calculateAll()">
+        &nbsp;&nbsp;
+        <label>出走頭数: </label>
+        <input type="number" id="horseCount" value="6" min="2" max="18" style="width: 50px;">
+        <button onclick="updateHorseCount()">頭数変更</button>
       </div>
       
-      <div style="margin-top: 15px; display: flex; gap: 10px;">
-        <button class="btn btn-primary" onclick="confirmNextRace()">確定＆次へ (履歴更新)</button>
-        <button class="btn btn-secondary" onclick="generateRandomRanks()">ランダム着順設定</button>
-        <button class="btn btn-danger" onclick="resetHistory()">全リセット</button>
+      <div style="margin-top: 10px;">
+        <button class="btn btn-primary" onclick="calculateAndConfirm()">計算・結果確定</button>
+        <button class="btn btn-secondary" onclick="generateRandomRanks()">【検証】ランダム着順</button>
+        <button class="btn btn-danger" onclick="resetHistory()">履歴リセット</button>
+      </div>
+
+      <div style="margin-top: 10px;">
+        <label>表示対象レース: </label>
+        <select id="historySelect" onchange="loadSelectedHistory()">
+          <!-- 動的生成 -->
+        </select>
       </div>
     </div>
 
     <!-- メインテーブル -->
-    <div class="table-container" style="overflow-x: auto;">
-      <table id="mainTable" class="shutuba-table">
+    <div class="table-container">
+      <table id="mainTable">
         <thead>
           <tr id="tableHeaderRow">
             <th>馬番</th>
             <th>馬名</th>
-            <th>人気</th>
-            <th>適正オッズ</th>
-            <th>確定着順</th>
+            <th>順位</th>
+            <th>単勝オッズ</th>
+            <th>着順入力</th>
             <th>勝率</th>
-            <th id="historyHeader" colspan="30">過去30レースの着順</th>
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -58,52 +91,57 @@
       </table>
     </div>
 
-    <!-- 各種予想・オッズ計算エリア -->
+    <!-- 適正オッズ計算エリア -->
     <div class="config-card" style="margin-top: 20px;">
-      <h2>単勝・連勝式 予想オッズ</h2>
+      <h2>適正オッズ計算</h2>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 15px;">
+      <div class="odds-box-container">
         <!-- 単勝 -->
-        <div style="background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #ddd;">
+        <div class="odds-card">
           <h3>単勝</h3>
-          <div style="margin-bottom: 10px;">
-            <label>馬番: </label>
-            <select id="tanHorse" onchange="calculateOddsSection()"></select>
+          <div class="select-row">
+            <label>馬番:</label>
+            <select id="tanHorse" onchange="calculateOddsSection()">
+              <!-- JSで動的生成 -->
+            </select>
           </div>
-          <div>適正オッズ: <strong id="tanOdds">---</strong> 倍</div>
-          <div>5,000円時払戻: <strong id="tanPay">---</strong> 円</div>
+          <div class="result-row">適正オッズ: <span id="tanOdds">---</span> 倍</div>
+          <div class="result-row">5,000円時払戻: <span id="tanPay">---</span> 円</div>
         </div>
 
-        <!-- 馬単 -->
-        <div style="background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #ddd;">
-          <h3>馬単 (2連単) 予想</h3>
-          <div style="margin-bottom: 10px;">
-            1着: <select id="niren1" onchange="calculateOddsSection()"></select> 番馬 →
-            2着: <select id="niren2" onchange="calculateOddsSection()"></select> 番馬
+        <!-- 2連単（馬単） -->
+        <div class="odds-card">
+          <h3>2連単（馬単）</h3>
+          <div class="select-row">
+            <select id="niren1" onchange="calculateOddsSection()"></select>
+            <span>→</span>
+            <select id="niren2" onchange="calculateOddsSection()"></select>
           </div>
-          <div>適正オッズ: <strong id="nirenOdds">---</strong> 倍</div>
-          <div>5,000円時払戻: <strong id="nirenPay">---</strong> 円</div>
+          <div class="result-row">適正オッズ: <span id="nirenOdds">---</span> 倍</div>
+          <div class="result-row">5,000円時払戻: <span id="nirenPay">---</span> 円</div>
         </div>
 
         <!-- 3連単 -->
-        <div style="background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #ddd;">
-          <h3>3連単 予想</h3>
-          <div style="margin-bottom: 10px;">
-            <select id="sanren1" onchange="calculateOddsSection()"></select> →
-            <select id="sanren2" onchange="calculateOddsSection()"></select> →
+        <div class="odds-card">
+          <h3>3連単</h3>
+          <div class="select-row">
+            <select id="sanren1" onchange="calculateOddsSection()"></select>
+            <span>→</span>
+            <select id="sanren2" onchange="calculateOddsSection()"></select>
+            <span>→</span>
             <select id="sanren3" onchange="calculateOddsSection()"></select>
           </div>
-          <div>適正オッズ: <strong id="sanrenOdds">---</strong> 倍</div>
-          <div>5,000円時払戻: <strong id="sanrenPay">---</strong> 円</div>
+          <div class="result-row">適正オッズ: <span id="sanrenOdds">---</span> 倍</div>
+          <div class="result-row">5,000円時払戻: <span id="sanrenPay">---</span> 円</div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const horseNames = ["馬番1", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"];
+    const horseNames = ["トウカイテイオー", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"];
 
-    // 隠し21レース
+    // 隠し21レースデータ
     const extraRaceHistory = [
       [1, 3, 5, 2, 4, 6], [1, 6, 2, 3, 4, 5], [1, 5, 2, 4, 3, 6], [2, 1, 3, 4, 5, 6],
       [2, 1, 4, 3, 5, 6], [6, 1, 2, 3, 4, 5], [2, 3, 1, 4, 5, 6], [2, 3, 4, 1, 5, 6],
@@ -113,20 +151,18 @@
       [2, 1, 5, 3, 4, 6]
     ];
 
-    // デフォルトの30レース初期データ
+    // デフォルト履歴（表示用）
     const defaultBaseHistory = [
-      [1, 2, 3, 4, 5, 6], [1, 2, 4, 3, 5, 6], [3, 1, 4, 2, 5, 6], [1, 4, 2, 3, 5, 6], [1, 3, 4, 2, 5, 6],
-      [1, 4, 3, 2, 5, 6], [1, 3, 4, 5, 2, 6], [1, 3, 4, 5, 2, 6], [1, 2, 4, 5, 3, 6], [1, 4, 2, 5, 3, 6],
-      [1, 3, 4, 5, 2, 6], [1, 3, 5, 4, 2, 6], [2, 1, 3, 4, 5, 6], [2, 1, 4, 3, 5, 6], [2, 3, 4, 5, 6, 1],
-      [3, 1, 2, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 4, 3, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6],
-      [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6],
-      [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6]
+      [1, 2, 3, 4, 5, 6], [1, 2, 4, 3, 5, 6], [2, 4, 1, 3, 5, 6], [1, 3, 4, 2, 5, 6], [1, 4, 2, 3, 5, 6],
+      [1, 4, 3, 2, 5, 6], [1, 5, 2, 3, 4, 6], [1, 5, 2, 3, 4, 6], [1, 2, 5, 3, 4, 6]
     ];
 
     let state = {
+      deductionRate: 0.25,
       horseCount: 6,
       horses: [],
-      historyRaces: JSON.parse(JSON.stringify(defaultBaseHistory))
+      historyRaces: [...defaultBaseHistory],
+      selectedRaceIndex: 0
     };
 
     function init() {
@@ -135,58 +171,23 @@
         state.horses.push({
           num: i,
           name: horseNames[i - 1] || `馬番${i}`,
-          confirmRank: "",
+          rankInput: "",
           winRate: 0,
           odds: 99.0,
-          popularity: 1
+          rank: "-"
         });
       }
+      updateHistorySelect();
       updateSelectOptions();
       calculateAll();
     }
 
-    function calculateAll() {
-      const deduction = parseFloat(document.getElementById('deductionRate').value) || 0.25;
-
-      state.horses.forEach(h => {
-        let winCount = 0;
-        let total = 0;
-
-        // 1. 隠し21レース分
-        extraRaceHistory.forEach(race => {
-          const rank = race.indexOf(h.num) + 1;
-          if (rank > 0) {
-            total++;
-            if (rank === 1) winCount++;
-          }
-        });
-
-        // 2. 表の30レース分
-        state.historyRaces.forEach(race => {
-          const rank = race.indexOf(h.num) + 1;
-          if (rank > 0) {
-            total++;
-            if (rank === 1) winCount++;
-          }
-        });
-
-        h.winRate = total > 0 ? winCount / total : 0;
-        if (h.winRate > 0) {
-          let rawOdds = (1 - deduction) / h.winRate;
-          h.odds = Math.min(Math.max(Math.floor(rawOdds * 10) / 10, 1.0), 99.0);
-        } else {
-          h.odds = 99.0;
-        }
-      });
-
-      // 人気順（オッズ昇順）の計算
-      const sorted = [...state.horses].sort((a, b) => a.odds - b.odds);
-      state.horses.forEach(h => {
-        h.popularity = sorted.findIndex(item => item.num === h.num) + 1;
-      });
-
-      renderTable();
-      calculateOddsSection();
+    function updateHorseCount() {
+      const count = parseInt(document.getElementById('horseCount').value);
+      if (count >= 2 && count <= 18) {
+        state.horseCount = count;
+        init();
+      }
     }
 
     function renderTable() {
@@ -195,49 +196,110 @@
 
       state.horses.forEach((h, index) => {
         const tr = document.createElement('tr');
-        
-        let historyTds = '';
-        state.historyRaces.forEach((race, rIdx) => {
-          const rank = race.indexOf(h.num) + 1;
-          const rankVal = rank > 0 ? rank : '';
-          historyTds += `<td><input type="number" min="1" max="${state.horseCount}" value="${rankVal}" style="width: 30px; text-align: center;" onchange="updateHistoryCell(${rIdx}, ${h.num}, this.value)"></td>`;
-        });
-
         tr.innerHTML = `
           <td>${h.num}</td>
-          <td><input type="text" value="${h.name}" style="width: 80px;" onchange="h.name=this.value; updateSelectOptions();"></td>
-          <td>${h.popularity}位</td>
+          <td>${h.name}</td>
+          <td>${h.rank}</td>
           <td style="font-weight: bold;">${h.odds.toFixed(1)}</td>
-          <td><input type="number" min="1" max="${state.horseCount}" value="${h.confirmRank}" style="width: 40px;" onchange="state.horses[${index}].confirmRank=this.value"></td>
-          <td>${(h.winRate).toFixed(2)}<br><small>(${(h.winRate * 100).toFixed(1)}%)</small></td>
-          ${historyTds}
+          <td><input type="number" min="1" max="${state.horseCount}" value="${h.rankInput}" onchange="updateRank(${index}, this.value)"></td>
+          <td>${(h.winRate * 100).toFixed(1)}%</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    function updateHistoryCell(raceIdx, horseNum, val) {
-      const numVal = parseInt(val);
-      if (!isNaN(numVal) && numVal >= 1) {
-        state.historyRaces[raceIdx][numVal - 1] = horseNum;
-      }
-      calculateAll();
+    function updateRank(index, val) {
+      state.horses[index].rankInput = val;
     }
 
-    function confirmNextRace() {
-      let newRace = [];
+    function calculateAll() {
+      const deduction = parseFloat(document.getElementById('deductionRate').value) || 0.25;
+      const targetRaceIdx = state.selectedRaceIndex;
+
       state.horses.forEach(h => {
-        if (h.confirmRank) {
-          newRace[parseInt(h.confirmRank) - 1] = h.num;
+        let winCount = 0;
+        let total = 0;
+
+        // 隠し21レース分
+        extraRaceHistory.forEach(race => {
+          const rank = race.indexOf(h.num) + 1;
+          if (rank > 0) {
+            total++;
+            if (rank === 1) winCount++;
+          }
+        });
+
+        // 直前までの蓄積データ
+        const slicedHistory = state.historyRaces.slice(0, targetRaceIdx);
+        slicedHistory.forEach(race => {
+          const rank = race.indexOf(h.num) + 1;
+          if (rank > 0) {
+            total++;
+            if (rank === 1) winCount++;
+          }
+        });
+
+        const winRate = total > 0 ? winCount / total : 0;
+        h.winRate = winRate;
+
+        if (winRate > 0) {
+          let rawOdds = (1 - deduction) / winRate;
+          let calculated = Math.floor(rawOdds * 10) / 10;
+          h.odds = Math.min(Math.max(calculated, 1.0), 99.0);
+        } else {
+          h.odds = 99.0;
+        }
+
+        if (state.historyRaces[targetRaceIdx]) {
+          const currentRank = state.historyRaces[targetRaceIdx].indexOf(h.num) + 1;
+          h.rank = currentRank > 0 ? `${currentRank}着` : "-";
+          h.rankInput = currentRank > 0 ? currentRank : "";
+        } else {
+          h.rank = "-";
         }
       });
-      if (newRace.filter(Boolean).length === state.horseCount) {
-        state.historyRaces.shift();
-        state.historyRaces.push(newRace);
-        state.horses.forEach(h => h.confirmRank = "");
+
+      renderTable();
+      syncSelectsToResult();
+      calculateOddsSection();
+    }
+
+    // 表示中のレース結果の1着・2着・3着馬番を選択肢に反映
+    function syncSelectsToResult() {
+      const currentRace = state.historyRaces[state.selectedRaceIndex];
+      if (currentRace && currentRace.length >= 3) {
+        const r1 = currentRace[0];
+        const r2 = currentRace[1];
+        const r3 = currentRace[2];
+
+        if (r1) {
+          document.getElementById('tanHorse').value = r1;
+          document.getElementById('niren1').value = r1;
+          document.getElementById('sanren1').value = r1;
+        }
+        if (r2) {
+          document.getElementById('niren2').value = r2;
+          document.getElementById('sanren2').value = r2;
+        }
+        if (r3) {
+          document.getElementById('sanren3').value = r3;
+        }
+      }
+    }
+
+    function calculateAndConfirm() {
+      let newRace = [];
+      state.horses.forEach(h => {
+        if (h.rankInput) {
+          newRace[parseInt(h.rankInput) - 1] = h.num;
+        }
+      });
+      if (newRace.length === state.horseCount) {
+        state.historyRaces[state.selectedRaceIndex] = newRace;
         calculateAll();
+        updateHistorySelect();
       } else {
-        alert("確定着順を全頭分入力してください。");
+        alert("全員の着順を入力してください");
       }
     }
 
@@ -245,30 +307,49 @@
       let nums = Array.from({length: state.horseCount}, (_, i) => i + 1);
       nums.sort(() => Math.random() - 0.5);
       state.horses.forEach((h, i) => {
-        h.confirmRank = nums[i];
+        h.rankInput = nums[i];
       });
-      renderTable();
+      calculateAll();
     }
 
     function resetHistory() {
-      state.historyRaces = JSON.parse(JSON.stringify(defaultBaseHistory));
+      state.historyRaces = [...defaultBaseHistory];
+      state.selectedRaceIndex = 0;
       init();
     }
 
+    function updateHistorySelect() {
+      const select = document.getElementById('historySelect');
+      select.innerHTML = '';
+      const totalCount = Math.max(30, state.historyRaces.length);
+      for (let i = 0; i < totalCount; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `${i + 1}回目`;
+        if (i === state.selectedRaceIndex) opt.selected = true;
+        select.appendChild(opt);
+      }
+    }
+
+    function loadSelectedHistory() {
+      const select = document.getElementById('historySelect');
+      state.selectedRaceIndex = parseInt(select.value) || 0;
+      calculateAll();
+    }
+
+    // 馬番だけのシンプルな選択肢に変更
     function updateSelectOptions() {
       const ids = ['tanHorse', 'niren1', 'niren2', 'sanren1', 'sanren2', 'sanren3'];
       ids.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
-        const cur = el.value;
         el.innerHTML = '';
         state.horses.forEach(h => {
           const opt = document.createElement('option');
           opt.value = h.num;
-          opt.textContent = `${h.num} (${h.name})`;
+          opt.textContent = `${h.num}番`;
           el.appendChild(opt);
         });
-        if (cur) el.value = cur;
       });
     }
 
@@ -279,14 +360,15 @@
       const tanNum = parseInt(document.getElementById('tanHorse').value);
       const tanHorse = state.horses.find(h => h.num === tanNum);
       if (tanHorse && tanHorse.winRate > 0) {
-        document.getElementById('tanOdds').textContent = tanHorse.odds.toFixed(1);
-        document.getElementById('tanPay').textContent = Math.floor(5000 * tanHorse.odds).toLocaleString();
+        const tanOdds = tanHorse.odds;
+        document.getElementById('tanOdds').textContent = tanOdds.toFixed(1);
+        document.getElementById('tanPay').textContent = Math.floor(5000 * tanOdds).toLocaleString();
       } else {
         document.getElementById('tanOdds').textContent = '---';
         document.getElementById('tanPay').textContent = '---';
       }
 
-      // 2. 馬単
+      // 2. 2連単
       const n1 = parseInt(document.getElementById('niren1').value);
       const n2 = parseInt(document.getElementById('niren2').value);
       const h1 = state.horses.find(h => h.num === n1);
