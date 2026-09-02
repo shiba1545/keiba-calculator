@@ -4,177 +4,122 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>出馬表 | 横浜サイエンスフロンティア杯</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: #f5f5f5;
-      margin: 20px;
-      color: #333;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .race-header {
-      border-bottom: 2px solid #002288;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
-    }
-    .race-title {
-      font-size: 20px;
-      font-weight: bold;
-      color: #002288;
-      margin-bottom: 8px;
-    }
-    .race-info {
-      font-size: 14px;
-      color: #555;
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-    .controls {
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    select {
-      padding: 8px 12px;
-      font-size: 15px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 15px;
-    }
-    th, td {
-      border: 1px solid #e0e0e0;
-      padding: 10px 8px;
-      text-align: center;
-    }
-    th {
-      background-color: #f0f0f0;
-      font-weight: bold;
-    }
-    /* 枠色スタイル */
-    .frame-1 { background-color: #ffffff; color: #000; }
-    .frame-2 { background-color: #2b2b2b; color: #fff; font-weight: bold; }
-    .frame-3 { background-color: #e53935; color: #fff; font-weight: bold; }
-    .frame-4 { background-color: #1e88e5; color: #fff; font-weight: bold; }
-    .frame-5 { background-color: #fdd835; color: #000; font-weight: bold; }
-    .frame-6 { background-color: #43a047; color: #fff; font-weight: bold; }
+    /* 出馬表固有の枠線カラー定義 */
+    .waku-1 { background-color: #ffffff; color: #000000; border: 1px solid #ccc; }
+    .waku-2 { background-color: #222222; color: #ffffff; }
+    .waku-3 { background-color: #e53935; color: #ffffff; }
+    .waku-4 { background-color: #1e88e5; color: #ffffff; }
+    .waku-5 { background-color: #fdd835; color: #000000; }
+    .waku-6 { background-color: #43a047; color: #ffffff; }
     
-    .horse-name {
-      text-align: left;
+    .waku-cell {
       font-weight: bold;
-      color: #002288;
-      padding-left: 12px;
+      width: 40px;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <!-- レース見出しエリア -->
-  <div class="race-header">
-    <div class="race-title">第<span id="raceNumDisplay">30</span>回 横浜サイエンスフロンティア杯 出馬予定馬</div>
-    <div class="race-info">
-      <span>開催日: 2026年9月5日</span>
-      <span>天気: ○○</span>
-      <span>コース: 校舎一周 ○○m</span>
+  <header>
+    <h1>出馬表</h1>
+  </header>
+
+  <div class="container">
+    <div class="config-card">
+      <h2>第1回 横浜サイエンスフロンティア杯 出馬予定馬</h2>
+      <p style="color: #666; font-size: 0.9rem;">開催日: 2026年9月5日 天気: 〇〇 コース: 校舎一周 〇〇m</p>
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 1rem 0;">
+      
+      <div class="input-group" style="display: flex; align-items: center; gap: 8px;">
+        <label for="raceSelect"><strong>表示: </strong></label>
+        <select id="raceSelect" onchange="changeRace(this.value)" style="padding: 6px 12px; border-radius: 4px; border: 1px solid #ccc;">
+          <!-- JSで自動生成 -->
+        </select>
+        <button id="btnShowResult" class="btn btn-secondary" onclick="showCurrentRaceResult()">結果表示</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>枠</th>
+            <th>馬番</th>
+            <th>馬名</th>
+            <th>勝率</th>
+            <th>オッズ</th>
+          </tr>
+        </thead>
+        <tbody id="shutubaTableBody">
+          <!-- JSで動的生成 -->
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <div class="controls">
-    <label for="raceSelect">表示：</label>
-    <select id="raceSelect" onchange="renderTable()"></select>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th style="width: 12%;">枠</th>
-        <th style="width: 12%;">馬番</th>
-        <th style="width: 36%;">馬名</th>
-        <th style="width: 20%;">勝率</th>
-        <th style="width: 20%;">オッズ</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
-</div>
-
-<script>
-  // 30レースの着順データ（1着〜6着）
-  const raceHistory = [
-    [1, 2, 3, 4, 5, 6], [1, 2, 4, 3, 5, 6], [2, 4, 1, 3, 5, 6], [1, 3, 4, 2, 5, 6], [1, 4, 2, 3, 5, 6],
-    [1, 4, 3, 2, 5, 6], [1, 5, 2, 3, 4, 6], [1, 5, 2, 3, 4, 6], [1, 2, 5, 3, 4, 6], [1, 3, 5, 2, 4, 6],
-    [1, 6, 2, 3, 4, 5], [1, 5, 2, 4, 3, 6], [2, 1, 3, 4, 5, 6], [2, 1, 4, 3, 5, 6], [6, 1, 2, 3, 4, 5],
-    [2, 3, 1, 4, 5, 6], [2, 3, 4, 1, 5, 6], [1, 3, 2, 4, 5, 6], [2, 4, 3, 1, 5, 6], [2, 5, 1, 3, 4, 6],
-    [3, 2, 1, 4, 5, 6], [3, 5, 1, 2, 6, 4], [3, 1, 4, 2, 5, 6], [3, 1, 2, 4, 5, 6], [4, 1, 3, 2, 5, 6],
-    [4, 1, 2, 3, 5, 6], [4, 2, 1, 3, 5, 6], [5, 1, 2, 3, 4, 6], [5, 2, 1, 3, 4, 6], [2, 1, 5, 3, 4, 6]
-  ];
-
-  // セレクトボックスの作成（1〜30回目）
-  const select = document.getElementById("raceSelect");
-  for (let i = 30; i >= 1; i--) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = `${i}回目`;
-    select.appendChild(opt);
-  }
-
-  function renderTable() {
-    const raceCount = parseInt(select.value);
-    
-    // タイトルの回数をドロップダウンと連動
-    document.getElementById("raceNumDisplay").innerText = raceCount;
-
-    const tbody = document.getElementById("tableBody");
-    tbody.innerHTML = "";
-
-    const deductionRate = 0.25; // 控除率25%
-
-    for (let horseNum = 1; horseNum <= 6; horseNum++) {
-      // 指定回数までの勝数を集計
-      let winCount = 0;
-      for (let r = 0; r < raceCount; r++) {
-        if (raceHistory[r][0] === horseNum) {
-          winCount++;
+  <script src="script.js"></script>
+  <script>
+    // ページ読み込み時に1回目時点を表示
+    window.addEventListener('DOMContentLoaded', () => {
+      const select = document.getElementById('raceSelect');
+      if (select) {
+        select.innerHTML = '';
+        for (let i = 1; i <= 30; i++) {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = `${i}回目`;
+          select.appendChild(opt);
         }
+        select.value = 1;
+        changeRace(1);
       }
+    });
 
-      // 勝率とオッズの計算
-      const winRate = winCount / raceCount;
-      let odds = 99.0;
-      if (winRate > 0) {
-        const rawOdds = (1 - deductionRate) / winRate;
-        odds = Math.floor(rawOdds * 10) / 10;
-        odds = Math.min(Math.max(odds, 1.0), 99.0);
-      }
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="frame-${horseNum}">${horseNum}</td>
-        <td>${horseNum}</td>
-        <td class="horse-name">馬番${horseNum}</td>
-        <td>${(winRate * 100).toFixed(1)}%</td>
-        <td>${odds.toFixed(1)}</td>
-      `;
-      tbody.appendChild(tr);
+    function changeRace(raceIndex) {
+      showHistoryAtRace(raceIndex);
+      renderShutubaTable();
     }
-  }
 
-  // 初期描画
-  renderTable();
-</script>
+    function renderShutubaTable() {
+      const tbody = document.getElementById('shutubaTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
 
+      const wakuClasses = ['waku-1', 'waku-2', 'waku-3', 'waku-4', 'waku-5', 'waku-6'];
+
+      state.horses.forEach((h, i) => {
+        const tr = document.createElement('tr');
+        const wakuClass = wakuClasses[i % 6];
+
+        tr.innerHTML = `
+          <td class="waku-cell ${wakuClass}">${i + 1}</td>
+          <td>${h.num}</td>
+          <td style="font-weight: bold; text-align: left; padding-left: 1rem;">${h.name}</td>
+          <td>${(h.winRate * 100).toFixed(1)}%</td>
+          <td>${h.odds.toFixed(1)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function showCurrentRaceResult() {
+      const raceSelect = document.getElementById('raceSelect');
+      const selectedRace = parseInt(raceSelect.value);
+      const targetIdx = selectedRace - 1;
+
+      let rank1 = "-", rank2 = "-", rank3 = "-";
+
+      state.horses.forEach(h => {
+        const r = String(h.history[targetIdx]);
+        if (r === "1") rank1 = `馬番${h.num} (${h.name})`;
+        if (r === "2") rank2 = `馬番${h.num} (${h.name})`;
+        if (r === "3") rank3 = `馬番${h.num} (${h.name})`;
+      });
+
+      alert(`【第${selectedRace}回 レース結果】\n\n🥇 1着: ${rank1}\n🥈 2着: ${rank2}\n🥉 3着: ${rank3}`);
+    }
+  </script>
 </body>
 </html>
