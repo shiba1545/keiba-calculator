@@ -112,3 +112,31 @@ th {
   font-size: 5rem !important; 
   text-align: center !important;  
 }
+/* 💡 レースタイトル（第1回 横浜サイエンスフロンティア杯...）のデザイン */
+#raceTitle {
+  font-size: 3rem !important;      /* 文字を大きくする */
+  font-weight: bold !important;      /* 太字にする */
+  color: var(--primary) !important;  /* テーマカラーの緑色にする */
+  border-bottom: 2px solid #e0e0e0;  /* 下にうっすら線を入れる */
+  padding-bottom: 8px !important;    /* 線との隙間をあける */
+  margin-top: 0 !important;
+}
+
+/* 💡 表の中の「勝率」が書かれているマスのデザイン */
+.shutuba-table td:nth-child(4), 
+.shutuba-table td:nth-child(5) {
+  font-size: 3rem !important;      /* 勝率の文字を大きくする（通常は4列目） */
+}
+
+/* 💡 結果表示のときの「勝率」のマス（結果時は5列目にズレるため対応） */
+.shutuba-table td:nth-child(5),
+.shutuba-table td:nth-child(6) {
+  font-size: 3rem !important;
+}
+
+/* 💡 オッズの数字だけをさらに強調するデザイン */
+.shutuba-table td:last-child {
+  font-size: 3rem !important;      /* オッズはさらにひと回り大きく */
+  color: var(--danger) !important;   /* オッズの数字を赤色にして目立たせる */
+  font-weight: bold !important;      /* 太字にする */
+}
