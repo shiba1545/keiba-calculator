@@ -114,7 +114,7 @@ th {
 }
 /* 💡 レースタイトル（第1回 横浜サイエンスフロンティア杯...）のデザイン */
 #raceTitle {
-  font-size: 3rem !important;      /* 文字を大きくする */
+  font-size: 2.5rem !important;      /* 文字を大きくする */
   font-weight: bold !important;      /* 太字にする */
   color: var(--primary) !important;  /* テーマカラーの緑色にする */
   border-bottom: 2px solid #e0e0e0;  /* 下にうっすら線を入れる */
