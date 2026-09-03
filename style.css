@@ -109,7 +109,7 @@ th {
 }
 /* 馬の名前のフォントサイズを大きくする設定 */
 .horse-name {
-  font-size: 2.5rem !important; 
+  font-size: 2.2rem !important; 
   text-align: center !important;  
 }
 /* 💡 レースタイトル（第1回 横浜サイエンスフロンティア杯...）のデザイン */
@@ -125,18 +125,18 @@ th {
 /* 💡 表の中の「勝率」が書かれているマスのデザイン */
 .shutuba-table td:nth-child(4), 
 .shutuba-table td:nth-child(5) {
-  font-size: 2rem !important;      /* 勝率の文字を大きくする（通常は4列目） */
+  font-size: 1.6rem !important;      /* 勝率の文字を大きくする（通常は4列目） */
 }
 
 /* 💡 結果表示のときの「勝率」のマス（結果時は5列目にズレるため対応） */
 .shutuba-table td:nth-child(5),
 .shutuba-table td:nth-child(6) {
-  font-size: 2rem !important;
+  font-size: 1.6rem !important;
 }
 
 /* 💡 オッズの数字だけをさらに強調するデザイン */
 .shutuba-table td:last-child {
-  font-size: 2rem !important;      /* オッズはさらにひと回り大きく */
-  color: var(--danger) !important;   /* オッズの数字を赤色にして目立たせる */
+  font-size: 1.6rem !important;      /* オッズはさらにひと回り大きく */
+  color: #333 !important;   /* オッズの数字を赤色にして目立たせる */
   font-weight: bold !important;      /* 太字にする */
 }
