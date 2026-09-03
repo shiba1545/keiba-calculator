@@ -107,3 +107,8 @@ th {
   margin-top: 0.5rem;
   font-weight: bold;
 }
+/* 馬の名前のフォントサイズを大きくする設定 */
+.horse-name {
+  font-size: 1.4rem !important; 
+  text-align: center !important;  
+}
