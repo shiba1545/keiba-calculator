@@ -100,7 +100,7 @@
   <script>
     window.state = window.state || { deductionRate: 0.25, horses: [] };
 
-    // 💡 30回分の各レースの馬名データ（1回目〜30回目まで自由に変更可能）
+    // 30回分の各レースの馬名データ（1回目〜30回目まで自由に変更可能）
     const raceHorseNames = [
       ["ヒダリノセネームウオ", "サカモト", "ナオイゴールド", "ツルミルツヨシ", "ハルキシャトル", "ヒダリニマガール"], // 1回目
       ["馬番1", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"], // 2回目
@@ -270,7 +270,7 @@
     // 馬番順での出馬表表示
     function renderShutubaTable() {
       document.getElementById('tableHeader').innerHTML = `
-        <th style="width: 45px;">馬番</th>
+        <th style="width: 80px;">馬番</th>
         <th style="width: 50px;">印</th>
         <th>馬名</th>
         <th style="width: 70px;">勝率</th>
