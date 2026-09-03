@@ -194,17 +194,15 @@
     function initHorses() {
       state.horses = [];
       for (let i = 1; i <= 6; i++) {
-        const horseHistory = defaultBaseHistory.map(race => {
-          const rank = race.indexOf(i) + 1;
-          return rank > 0 ? rank : "";
-        });
-
         state.horses.push({
           num: i,
-          name: horseNames[i - 1] || `馬番${i}`,
+          name: `馬番${i}`, // 初期値（changeRaceで上書きされます）
           winRate: 0,
           odds: 99.0,
-          history: horseHistory
+          history: defaultBaseHistory.map(race => {
+            const rank = race.indexOf(i) + 1;
+            return rank > 0 ? rank : "";
+          })
         });
       }
     }
@@ -231,22 +229,21 @@
     // レース選択変更時
     function changeRace(raceIndex) {
       calculateRaceDisplay(raceIndex);
-      updateRaceTitle(raceIndex); // 💡 タイトル書き換え処理
+      updateRaceTitle(raceIndex);
       renderShutubaTable();
     }
 
-    // 「reset」ボタン用：現在の回のまま元の出馬表（馬番順）に戻す
+    // 「reset」ボタン用
     function resetToShutubaTable() {
       const raceSelect = document.getElementById('raceSelect');
       const selectedRace = raceSelect ? raceSelect.value : 1;
       changeRace(selectedRace);
     }
 
-    // 💡 タイトルを動的に書き換える関数
+    // タイトル動的書き換え
     function updateRaceTitle(raceIndex) {
       const idx = parseInt(raceIndex) - 1;
       const locationText = raceLocations[idx] || "不明なコース";
-      
       const titleElement = document.getElementById('raceTitle');
       if (titleElement) {
         titleElement.textContent = `第${raceIndex}回 横浜サイエンスフロンティア杯 (${locationText}) 枠順`;
@@ -255,9 +252,16 @@
 
     function calculateRaceDisplay(raceIndex) {
       raceIndex = parseInt(raceIndex);
+      const idx = raceIndex - 1;
       const deductionRate = 0.25;
 
+      // 💡 選ばれた回の馬名セットを取得（なければデフォルトを用意）
+      const currentNames = raceHorseNames[idx] || ["馬番1", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"];
+
       state.horses.forEach((h) => {
+        // 💡 馬の名前を選ばれたレースのものに書き換える
+        h.name = currentNames[h.num - 1] || `馬番${h.num}`;
+
         let winCount = 0;
         let total = 0;
 
@@ -321,7 +325,7 @@
       });
     }
 
-    // 「結果表示」ボタン（1着からの順位順に並び替え）
+    // 「結果表示」ボタン
     function showCurrentRaceResult() {
       const raceSelect = document.getElementById('raceSelect');
       const selectedRace = parseInt(raceSelect.value);
