@@ -66,7 +66,7 @@
 
   <div class="container">
     <div class="config-card">
-      <!-- 表示が連動するように id="raceTitle" を追加 -->
+      <!-- タイトルが動的に変わるように id="raceTitle" を追加 -->
       <h2 id="raceTitle" style="font-size: 1.2rem; margin-bottom: 4px;">第1回 横浜サイエンスフロンティア杯 (外周 1600m) </h2>
       
       <div class="control-panel">
@@ -98,11 +98,11 @@
     </div>
   </div>
   <script>
-    // 馬名設定
-    // 30回分の各レースの馬名データ（回ごとに6頭の名前を設定）
+    window.state = window.state || { deductionRate: 0.25, horses: [] };
+
+    // 💡 30回分の各レースの馬名データ（1回目〜30回目まで自由に変更可能）
     const raceHorseNames = [
-      ["ヒダリノセネームウオ", "サカモト", "ナオイゴールド", "ツルミルツヨシ", "ハルキシャトル", "ヒダリニマガール
-"], // 1回目
+      ["ヒダリノセネームウオ", "サカモト", "ナオイゴールド", "ツルミルツヨシ", "ハルキシャトル", "ヒダリニマガール"], // 1回目
       ["馬番1", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"], // 2回目
       ["馬番1", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"], // 3回目
       ["馬番1", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"], // 4回目
@@ -134,44 +134,16 @@
       ["馬番1", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"]  // 30回目
     ];
 
-
-    window.state = window.state || { deductionRate: 0.25, horses: [] };
-
     // 💡 30回分の開催場所・コース条件データ
     const raceLocations = [
-      "外周 1600m",
-      "花月総持寺公園 400m",
-      "学校（競歩）1600m",
-      "外周 1600m",
-      "学校（競歩）",
-      "花月総持寺公園 皐月賞",
-      "外周 1600m",
-      "花月総持寺公園 400m",
-      "学校（競歩）",
-      "外周 1600m",
-      "学校（競歩）",
-      "花月総持寺公園 400m",
-      "外周 1600m",
-      "花月総持寺公園 400m",
-      "学校（競歩）350m",
-      "外周 1600m",
-      "学校（競歩）350m",
-      "花月総持寺 菊花賞 400m",
-      "外周 1600m",
-      "花月総持寺 公園 400m",
-      "学校（競歩）350m",
-      "外周 1600m",
-      "学校（競歩）350m",
-      "SSH（重賞）200m",
-      "外周 1600m",
-      "花月総持寺公園 400m",
-      "学校内（競歩）350m",
-      "外周 1600m",
-      "学校（競歩） 350m",
-      "花月総持寺公演 有馬記念（重賞）400m"
+      "外周 1600m", "花月総持寺公園 400m", "学校（競歩）1600m", "外周 1600m", "学校（競歩）",
+      "花月総持寺公園 皐月賞", "外周 1600m", "花月総持寺公園 400m", "学校（競歩）", "外周 1600m",
+      "学校（競歩）", "花月総持寺公園 400m", "外周 1600m", "花月総持寺公園 400m", "学校（競歩）350m",
+      "外周 1600m", "学校（競歩）350m", "花月総持寺 菊花賞 400m", "外周 1600m", "花月総持寺 公園 400m",
+      "学校（競歩）350m", "外周 1600m", "学校（競歩）350m", "SSH（重賞）200m", "外周 1600m",
+      "花月総持寺公園 400m", "学校内（競歩）350m", "外周 1600m", "学校（競歩） 350m", "花月総持寺公演 有馬記念（重賞）400m"
     ];
-
-    // 隠し21レースデータ
+    // 💡 隠し21レースデータ
     const extraRaceHistory = [, [1, 6, 2, 3, 4, 5], [1, 5, 2, 4, 3, 6], [2, 1, 3, 4, 5, 6],
 , [6, 1, 2, 3, 4, 5], [2, 3, 1, 4, 5, 6], [2, 3, 4, 1, 5, 6],
 , [2, 4, 3, 1, 5, 6], [2, 5, 1, 3, 4, 6], [3, 2, 1, 4, 5, 6],
@@ -180,7 +152,7 @@
       [2, 1, 5, 3, 4, 6]
     ];
 
-    // 30回分の履歴データ
+    // 💡 30回分の履歴データ
     const defaultBaseHistory = [, [1, 2, 4, 3, 5, 6], [2, 4, 1, 3, 5, 6], [1, 3, 4, 2, 5, 6],
 , [1, 4, 3, 2, 5, 6], [1, 5, 2, 3, 4, 6], [1, 5, 2, 3, 4, 6],
 , [1, 3, 5, 2, 4, 6], [1, 6, 2, 3, 4, 5], [1, 5, 2, 4, 3, 6],
@@ -196,7 +168,7 @@
       for (let i = 1; i <= 6; i++) {
         state.horses.push({
           num: i,
-          name: `馬番${i}`, // 初期値（changeRaceで上書きされます）
+          name: `馬番${i}`,
           winRate: 0,
           odds: 99.0,
           history: defaultBaseHistory.map(race => {
@@ -233,17 +205,18 @@
       renderShutubaTable();
     }
 
-    // 「reset」ボタン用
+    // 「reset」ボタン用：現在の回のまま元の出馬表（馬番順）に戻す
     function resetToShutubaTable() {
       const raceSelect = document.getElementById('raceSelect');
       const selectedRace = raceSelect ? raceSelect.value : 1;
       changeRace(selectedRace);
     }
 
-    // タイトル動的書き換え
+    // タイトルを動的に書き換える関数
     function updateRaceTitle(raceIndex) {
       const idx = parseInt(raceIndex) - 1;
       const locationText = raceLocations[idx] || "不明なコース";
+      
       const titleElement = document.getElementById('raceTitle');
       if (titleElement) {
         titleElement.textContent = `第${raceIndex}回 横浜サイエンスフロンティア杯 (${locationText}) 枠順`;
@@ -255,11 +228,11 @@
       const idx = raceIndex - 1;
       const deductionRate = 0.25;
 
-      // 💡 選ばれた回の馬名セットを取得（なければデフォルトを用意）
+      // 選ばれた回の馬名セットを取得
       const currentNames = raceHorseNames[idx] || ["馬番1", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"];
 
       state.horses.forEach((h) => {
-        // 💡 馬の名前を選ばれたレースのものに書き換える
+        // 馬の名前を選ばれたレースのものに書き換える
         h.name = currentNames[h.num - 1] || `馬番${h.num}`;
 
         let winCount = 0;
@@ -325,7 +298,7 @@
       });
     }
 
-    // 「結果表示」ボタン
+    // 「結果表示」ボタン（1着からの順位順に並び替え）
     function showCurrentRaceResult() {
       const raceSelect = document.getElementById('raceSelect');
       const selectedRace = parseInt(raceSelect.value);
