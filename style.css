@@ -109,6 +109,6 @@ th {
 }
 /* 馬の名前のフォントサイズを大きくする設定 */
 .horse-name {
-  font-size: 1.4rem !important; 
+  font-size: 5rem !important; 
   text-align: center !important;  
 }
