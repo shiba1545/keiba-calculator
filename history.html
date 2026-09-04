@@ -110,6 +110,9 @@
   <script>
     window.state = window.state || { deductionRate: 0.25, horses: [] };
 
+    // 保存用キーのプレフィックス
+    const STORAGE_KEY_PREFIX = 'keiba_race_column_';
+
     // 馬名ごとの色設定マップ
     const horseColorMap = {
       "アサノヒカリノナカデ": "color-cyan",
@@ -148,7 +151,7 @@
       ["ハルキシャトル(メイド)", "ヒダリニマガール", "ツルミルツヨシ(メイド)", "ヒダリノセネームウオ", "ナオイゴールド(メイド)", "サカモト"],
       ["ナオイゴールド(メイド)", "ブドウトウフェチ", "エンサンブラック(メイド)", "キシラギエース(メイド)", "カスキン", "ハイセンスナサイエンス"],
       ["エンサンブラック(メイド)", "サイエンススズカ(タキシード)", "キシラギエース(メイド)", "イノイノックス(メイド)", "ゴールドシップ(メイド)", "ナオイゴールド(メイド)"],
-      ["ツルミルツヨシ(メイド)", "ヒダリノセネームウオ", "ナオイゴールド(メイド)", "サカモト", "ハルキシャトル(メイド)", "ヒダリニマガール"],
+      ["ツルミルツヨシ(メイド)", "ナオイゴールド(メイド)", "ヒダリノセネームウオ", "サカモト", "ハルキシャトル(メイド)", "ヒダリニマガール"],
       ["サイエンススズカ(タキシード)", "ナオイゴールド(メイド)", "ヤエノササキ(メイド)", "ケイイチパンドラ(変態)", "ラクラクラク", "ハイセンスナサイエンス"],
       ["馬番1", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"],
       ["ハルキシャトル(メイド)", "ヒダリノセネームウオ", "ツルミルツヨシ(メイド)", "ナオイゴールド(メイド)", "ヒダリニマガール", "サカモト"],
@@ -275,11 +278,27 @@
       const deductionRate = 0.25;
 
       const currentNames = raceHorseNames[idx] || ["馬番1", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"];
-      const currentColumns = columnHistory[idx] || [1, 2, 3, 4, 5, 6];
+      
+      // localStorage から各レースの列の設定をロード（無ければデフォルト値）
+      let savedColumns = null;
+      try {
+        const storedData = localStorage.getItem(STORAGE_KEY_PREFIX + raceIndex);
+        if (storedData) {
+          savedColumns = JSON.parse(storedData);
+        }
+      } catch (e) {
+        console.error("ローカルストレージの読み込みエラー:", e);
+      }
+
+      const defaultColumns = columnHistory[idx] || [1, 2, 3, 4, 5, 6];
 
       state.horses.forEach((h) => {
         h.name = currentNames[h.num - 1] || `馬番${h.num}`;
-        h.columnVal = currentColumns[h.num - 1] !== undefined ? currentColumns[h.num - 1] : "";
+        if (savedColumns && savedColumns[h.num - 1] !== undefined) {
+          h.columnVal = savedColumns[h.num - 1];
+        } else {
+          h.columnVal = defaultColumns[h.num - 1] !== undefined ? defaultColumns[h.num - 1] : "";
+        }
 
         let winCount = 0;
         let total = 0;
@@ -317,6 +336,17 @@
       const horse = state.horses.find(h => h.num === horseNum);
       if (horse) {
         horse.columnVal = val;
+      }
+
+      // 現在選択中のレース番号を取得して localStorage に保存
+      const raceSelect = document.getElementById('raceSelect');
+      const currentRace = raceSelect ? raceSelect.value : 1;
+      
+      const columnsToSave = state.horses.map(h => h.columnVal);
+      try {
+        localStorage.setItem(STORAGE_KEY_PREFIX + currentRace, JSON.stringify(columnsToSave));
+      } catch (e) {
+        console.error("ローカルストレージの保存エラー:", e);
       }
     }
 
