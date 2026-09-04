@@ -44,6 +44,15 @@
       padding-left: 8px !important;
     }
 
+    .row-input {
+      width: 45px;
+      padding: 4px;
+      text-align: center;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
     .control-panel {
       display: flex;
       align-items: center;
@@ -84,7 +93,7 @@
         <thead>
           <tr id="tableHeader">
             <th style="width: 45px;">馬番</th>
-            <th style="width: 50px;">列</th>
+            <th style="width: 60px;">列</th>
             <th>馬名</th>
             <th style="width: 70px;">勝率</th>
             <th style="width: 70px;">オッズ</th>
@@ -162,6 +171,40 @@
       [5, 2, 1, 3, 4, 6], [2, 1, 5, 3, 4, 6]
     ];
 
+    /* 各レースの「列」データを格納する配列（馬番1〜6に対する列の数値を指定） */
+    const columnHistory = [
+      [1, 2, 3, 4, 5, 6], // 第1回レース
+      [1, 2, 3, 4, 5, 6], // 第2回レース
+      [1, 2, 3, 4, 5, 6], // 第3回レース
+      [1, 2, 3, 4, 5, 6], // 第4回レース
+      [1, 2, 3, 4, 5, 6], // 第5回レース
+      [1, 2, 3, 4, 5, 6], // 第6回レース
+      [1, 2, 3, 4, 5, 6], // 第7回レース
+      [1, 2, 3, 4, 5, 6], // 第8回レース
+      [1, 2, 3, 4, 5, 6], // 第9回レース
+      [1, 2, 3, 4, 5, 6], // 第10回レース
+      [1, 2, 3, 4, 5, 6], // 第11回レース
+      [1, 2, 3, 4, 5, 6], // 第12回レース
+      [1, 2, 3, 4, 5, 6], // 第13回レース
+      [1, 2, 3, 4, 5, 6], // 第14回レース
+      [1, 2, 3, 4, 5, 6], // 第15回レース
+      [1, 2, 3, 4, 5, 6], // 第16回レース
+      [1, 2, 3, 4, 5, 6], // 第17回レース
+      [1, 2, 3, 4, 5, 6], // 第18回レース
+      [1, 2, 3, 4, 5, 6], // 第19回レース
+      [1, 2, 3, 4, 5, 6], // 第20回レース
+      [1, 2, 3, 4, 5, 6], // 第21回レース
+      [1, 2, 3, 4, 5, 6], // 第22回レース
+      [1, 2, 3, 4, 5, 6], // 第23回レース
+      [1, 2, 3, 4, 5, 6], // 第24回レース
+      [1, 2, 3, 4, 5, 6], // 第25回レース
+      [1, 2, 3, 4, 5, 6], // 第26回レース
+      [1, 2, 3, 4, 5, 6], // 第27回レース
+      [1, 2, 3, 4, 5, 6], // 第28回レース
+      [1, 2, 3, 4, 5, 6], // 第29回レース
+      [1, 2, 3, 4, 5, 6]  // 第30回レース
+    ];
+
     function initHorses() {
       state.horses = [];
       for (let i = 1; i <= 6; i++) {
@@ -170,6 +213,7 @@
           name: `馬番${i}`,
           winRate: 0,
           odds: 99.0,
+          columnVal: "",
           history: defaultBaseHistory.map(race => {
             const rank = race.indexOf(i) + 1;
             return rank > 0 ? rank : "";
@@ -224,9 +268,11 @@
       const deductionRate = 0.25;
 
       const currentNames = raceHorseNames[idx] || ["馬番1", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"];
+      const currentColumns = columnHistory[idx] || [1, 2, 3, 4, 5, 6];
 
       state.horses.forEach((h) => {
         h.name = currentNames[h.num - 1] || `馬番${h.num}`;
+        h.columnVal = currentColumns[h.num - 1] !== undefined ? currentColumns[h.num - 1] : "";
 
         let winCount = 0;
         let total = 0;
@@ -260,10 +306,17 @@
       });
     }
 
+    function updateColumnVal(horseNum, val) {
+      const horse = state.horses.find(h => h.num === horseNum);
+      if (horse) {
+        horse.columnVal = val;
+      }
+    }
+
     function renderShutubaTable() {
       document.getElementById('tableHeader').innerHTML = `
         <th style="width: 45px;">馬番</th>
-        <th style="width: 50px;">列</th>
+        <th style="width: 60px;">列</th>
         <th>馬名</th>
         <th style="width: 70px;">勝率</th>
         <th style="width: 70px;">オッズ</th>
@@ -275,13 +328,13 @@
 
       const wakuClasses = ['waku-1', 'waku-2', 'waku-3', 'waku-4', 'waku-5', 'waku-6', 'waku-7', 'waku-8'];
 
-      state.horses.forEach((h, index) => {
+      state.horses.forEach((h) => {
         const tr = document.createElement('tr');
         const wakuClass = wakuClasses[(h.num - 1) % 8];
 
         tr.innerHTML = `
           <td class="${wakuClass}">${h.num}</td>
-          <td>${index + 1}</td>
+          <td><input type="number" class="row-input" value="${h.columnVal !== undefined ? h.columnVal : ''}" onchange="updateColumnVal(${h.num}, this.value)" min="1" max="99"></td>
           <td class="horse-name">${h.name}</td>
           <td>${(h.winRate * 100).toFixed(1)}%</td>
           <td style="font-weight: bold;">${h.odds.toFixed(1)}</td>
@@ -303,7 +356,7 @@
       document.getElementById('tableHeader').innerHTML = `
         <th style="width: 45px;">着順</th>
         <th style="width: 45px;">馬番</th>
-        <th style="width: 50px;">列</th>
+        <th style="width: 60px;">列</th>
         <th>馬名</th>
         <th style="width: 70px;">勝率</th>
         <th style="width: 70px;">オッズ</th>
@@ -315,7 +368,7 @@
 
       const wakuClasses = ['waku-1', 'waku-2', 'waku-3', 'waku-4', 'waku-5', 'waku-6', 'waku-7', 'waku-8'];
 
-      resultList.forEach((h, index) => {
+      resultList.forEach((h) => {
         const tr = document.createElement('tr');
         const wakuClass = wakuClasses[(h.num - 1) % 8];
         const rankDisplay = h.currentRank <= 6 ? `${h.currentRank}着` : '-';
@@ -323,7 +376,7 @@
         tr.innerHTML = `
           <td style="font-weight: bold; color: #d32f2f;">${rankDisplay}</td>
           <td class="${wakuClass}">${h.num}</td>
-          <td>${index + 1}</td>
+          <td><input type="number" class="row-input" value="${h.columnVal !== undefined ? h.columnVal : ''}" onchange="updateColumnVal(${h.num}, this.value)" min="1" max="99"></td>
           <td class="horse-name">${h.name}</td>
           <td>${(h.winRate * 100).toFixed(1)}%</td>
           <td style="font-weight: bold;">${h.odds.toFixed(1)}</td>
