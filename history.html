@@ -27,15 +27,16 @@
       vertical-align: middle;
     }
     
-    /* 馬番の枠色スタイル */
-    .waku-1 { background-color: #ffffff; color: #000; font-weight: bold; }
-    .waku-2 { background-color: #222222; color: #fff; font-weight: bold; }
-    .waku-3 { background-color: #e53935; color: #fff; font-weight: bold; }
-    .waku-4 { background-color: #1e88e5; color: #fff; font-weight: bold; }
-    .waku-5 { background-color: #fdd835; color: #000; font-weight: bold; }
-    .waku-6 { background-color: #43a047; color: #fff; font-weight: bold; }
-    .waku-7 { background-color: #fb8c00; color: #fff; font-weight: bold; }
-    .waku-8 { background-color: #f48fb1; color: #fff; font-weight: bold; }
+    /* 馬番の枠色スタイル（色指定） */
+    .color-white  { background-color: #ffffff; color: #000; font-weight: bold; } /* 白 */
+    .color-black  { background-color: #222222; color: #fff; font-weight: bold; } /* 黒 */
+    .color-red    { background-color: #e53935; color: #fff; font-weight: bold; } /* 赤 */
+    .color-blue   { background-color: #1e88e5; color: #fff; font-weight: bold; } /* 青 */
+    .color-yellow { background-color: #fdd835; color: #000; font-weight: bold; } /* 黄 */
+    .color-green  { background-color: #43a047; color: #fff; font-weight: bold; } /* 緑 */
+    .color-orange { background-color: #fb8c00; color: #fff; font-weight: bold; } /* 橙・オレンジ */
+    .color-pink   { background-color: #f48fb1; color: #fff; font-weight: bold; } /* 桃色・ピンク */
+    .color-cyan   { background-color: #00bcd4; color: #fff; font-weight: bold; } /* 水色 */
 
     .horse-name {
       font-weight: bold;
@@ -109,10 +110,41 @@
   <script>
     window.state = window.state || { deductionRate: 0.25, horses: [] };
 
+    // 馬名ごとの色設定マップ
+    const horseColorMap = {
+      "アサノヒカリノナカデ": "color-cyan",
+      "イノイノックス": "color-pink",
+      "ウオｗカ": "color-red",
+      "エルコンドルカサー": "color-pink",
+      "エンサンブラック": "color-black",
+      "オノフェーブル": "color-cyan",
+      "カスキン": "color-red",
+      "キシラギエース": "color-black",
+      "ケイイチパンドラ": "color-blue",
+      "ゴールドシップ": "color-red",
+      "サカモト": "color-orange",
+      "サオリキャプ": "color-cyan",
+      "サイエンススズカ": "color-black",
+      "ツインメイド": "color-black",
+      "ツルミルツヨシ": "color-red",
+      "ナカハマフェスタ": "color-red",
+      "ナオイゴールド": "color-white",
+      "ハルキシャトル": "color-black",
+      "ハイセンスサイエンス": "color-orange",
+      "ハイセンスナサイエンス": "color-orange",
+      "パッション": "color-pink",
+      "ヒダリニマガール": "color-pink",
+      "ヒダリノセネームウオ": "color-cyan",
+      "フォーカスゴールド": "color-red",
+      "ブドウトウフェチ": "color-cyan",
+      "ヤエノササキ": "color-black",
+      "ラクラクラク": "color-black"
+    };
+
     const raceHorseNames = [
       ["ハルキシャトル", "ヒダリノセネームウオ", "ツルミルツヨシ", "ヒダリニマガール", "サカモト", "ナオイゴールド"],
       ["サイエンススズカ", "ナオイゴールド", "ケイイチパンドラ", "ヤエノササキ", "ラクラクラク", "ハイセンスサイエンス"],
-      ["ヒダリノセネームウオ", "ハルキシャトル", "ヒダリニマガール", "ツルミルツヨシ", "ナオイゴールド", "サカモト"],
+      ["パッション", "キシラギエース", "ナカハマフェスタ", "イノイノックス", "フォーカスゴールド", "アサノヒカリノナカデ"],
       ["ハルキシャトル", "ヒダリニマガール", "ツルミルツヨシ", "ヒダリノセネームウオ", "ナオイゴールド", "サカモト"],
       ["ナオイゴールド", "ブドウトウフェチ", "エンサンブラック", "キシラギエース", "カスキン", "ハイセンスナサイエンス"],
       ["エンサンブラック", "サイエンススズカ", "キシラギエース", "イノイノックス", "ゴールドシップ", "ナオイゴールド"],
@@ -171,38 +203,13 @@
       [5, 2, 1, 3, 4, 6], [2, 1, 5, 3, 4, 6]
     ];
 
-    /* 各レースの「列」データを格納する配列（馬番1〜6に対する列の数値を指定） */
     const columnHistory = [
-      [1, 2, 3, 4, 5, 6], // 第1回レース
-      [1, 2, 3, 4, 5, 6], // 第2回レース
-      [1, 2, 3, 4, 5, 6], // 第3回レース
-      [1, 2, 3, 4, 5, 6], // 第4回レース
-      [1, 2, 3, 4, 5, 6], // 第5回レース
-      [1, 2, 3, 4, 5, 6], // 第6回レース
-      [1, 2, 3, 4, 5, 6], // 第7回レース
-      [1, 2, 3, 4, 5, 6], // 第8回レース
-      [1, 2, 3, 4, 5, 6], // 第9回レース
-      [1, 2, 3, 4, 5, 6], // 第10回レース
-      [1, 2, 3, 4, 5, 6], // 第11回レース
-      [1, 2, 3, 4, 5, 6], // 第12回レース
-      [1, 2, 3, 4, 5, 6], // 第13回レース
-      [1, 2, 3, 4, 5, 6], // 第14回レース
-      [1, 2, 3, 4, 5, 6], // 第15回レース
-      [1, 2, 3, 4, 5, 6], // 第16回レース
-      [1, 2, 3, 4, 5, 6], // 第17回レース
-      [1, 2, 3, 4, 5, 6], // 第18回レース
-      [1, 2, 3, 4, 5, 6], // 第19回レース
-      [1, 2, 3, 4, 5, 6], // 第20回レース
-      [1, 2, 3, 4, 5, 6], // 第21回レース
-      [1, 2, 3, 4, 5, 6], // 第22回レース
-      [1, 2, 3, 4, 5, 6], // 第23回レース
-      [1, 2, 3, 4, 5, 6], // 第24回レース
-      [1, 2, 3, 4, 5, 6], // 第25回レース
-      [1, 2, 3, 4, 5, 6], // 第26回レース
-      [1, 2, 3, 4, 5, 6], // 第27回レース
-      [1, 2, 3, 4, 5, 6], // 第28回レース
-      [1, 2, 3, 4, 5, 6], // 第29回レース
-      [1, 2, 3, 4, 5, 6]  // 第30回レース
+      [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6],
+      [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6],
+      [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6],
+      [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6],
+      [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6],
+      [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6]
     ];
 
     function initHorses() {
@@ -313,6 +320,15 @@
       }
     }
 
+    // 馬名から対応する枠色クラスを取得（未設定時は枠番(1-8)ベースにフォールバック）
+    function getHorseColorClass(horseName, horseNum) {
+      if (horseColorMap[horseName]) {
+        return horseColorMap[horseName];
+      }
+      const wakuClasses = ['color-white', 'color-black', 'color-red', 'color-blue', 'color-yellow', 'color-green', 'color-orange', 'color-pink'];
+      return wakuClasses[(horseNum - 1) % 8];
+    }
+
     function renderShutubaTable() {
       document.getElementById('tableHeader').innerHTML = `
         <th style="width: 45px;">馬番</th>
@@ -326,14 +342,12 @@
       if (!tbody) return;
       tbody.innerHTML = '';
 
-      const wakuClasses = ['waku-1', 'waku-2', 'waku-3', 'waku-4', 'waku-5', 'waku-6', 'waku-7', 'waku-8'];
-
       state.horses.forEach((h) => {
         const tr = document.createElement('tr');
-        const wakuClass = wakuClasses[(h.num - 1) % 8];
+        const colorClass = getHorseColorClass(h.name, h.num);
 
         tr.innerHTML = `
-          <td class="${wakuClass}">${h.num}</td>
+          <td class="${colorClass}">${h.num}</td>
           <td><input type="number" class="row-input" value="${h.columnVal !== undefined ? h.columnVal : ''}" onchange="updateColumnVal(${h.num}, this.value)" min="1" max="99"></td>
           <td class="horse-name">${h.name}</td>
           <td>${(h.winRate * 100).toFixed(1)}%</td>
@@ -366,16 +380,14 @@
       if (!tbody) return;
       tbody.innerHTML = '';
 
-      const wakuClasses = ['waku-1', 'waku-2', 'waku-3', 'waku-4', 'waku-5', 'waku-6', 'waku-7', 'waku-8'];
-
       resultList.forEach((h) => {
         const tr = document.createElement('tr');
-        const wakuClass = wakuClasses[(h.num - 1) % 8];
+        const colorClass = getHorseColorClass(h.name, h.num);
         const rankDisplay = h.currentRank <= 6 ? `${h.currentRank}着` : '-';
 
         tr.innerHTML = `
           <td style="font-weight: bold; color: #d32f2f;">${rankDisplay}</td>
-          <td class="${wakuClass}">${h.num}</td>
+          <td class="${colorClass}">${h.num}</td>
           <td><input type="number" class="row-input" value="${h.columnVal !== undefined ? h.columnVal : ''}" onchange="updateColumnVal(${h.num}, this.value)" min="1" max="99"></td>
           <td class="horse-name">${h.name}</td>
           <td>${(h.winRate * 100).toFixed(1)}%</td>
