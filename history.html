@@ -120,7 +120,7 @@
   <script>
     // ===== JSONBin 設定 =====
     const JSONBIN_BIN_ID = '6a9afcccda38895dfe395945'; 
-    const JSONBIN_API_KEY = '$2a$10$m3qUmeizOg.oKyptUpbxcObKcTYCK0HFZZffxeDHdfcP37cjFU.ki';
+    const JSONBIN_ACCESS_KEY = '$2a$10$bO8Kvm15SD/KbEI6m7ywcODSXYq0Q76xW/OSJg8i5hxwhvLRyhNx2';
     // =======================
 
     window.state = window.state || { deductionRate: 0.25, horses: [] };
@@ -238,11 +238,10 @@
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
           headers: { 
-            'X-Master-Key': JSONBIN_API_KEY,
-            'X-Access-Key': JSONBIN_API_KEY
+            'X-Access-Key': JSONBIN_ACCESS_KEY
           }
         });
-        if (!res.ok) throw new Error('取得失敗');
+        if (!res.ok) throw new Error(`取得失敗: ${res.status}`);
         const data = await res.json();
         cloudDataStore = data.record || {};
         updateStatus("同期完了");
@@ -264,12 +263,11 @@
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'X-Master-Key': JSONBIN_API_KEY,
-            'X-Access-Key': JSONBIN_API_KEY
+            'X-Access-Key': JSONBIN_ACCESS_KEY
           },
           body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error('保存失敗');
+        if (!res.ok) throw new Error(`保存失敗: ${res.status}`);
         updateStatus("保存完了");
       } catch (e) {
         console.error(e);
