@@ -237,7 +237,10 @@
       updateStatus("クラウドから取得中...");
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-          headers: { 'X-Master-Key': JSONBIN_API_KEY }
+          headers: { 
+            'X-Master-Key': JSONBIN_API_KEY,
+            'X-Access-Key': JSONBIN_API_KEY
+          }
         });
         if (!res.ok) throw new Error('取得失敗');
         const data = await res.json();
@@ -256,13 +259,15 @@
     async function saveToJSONBin() {
       updateStatus("保存中...");
       try {
+        const payload = Object.keys(cloudDataStore).length === 0 ? { init: true } : cloudDataStore;
         const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'X-Master-Key': JSONBIN_API_KEY
+            'X-Master-Key': JSONBIN_API_KEY,
+            'X-Access-Key': JSONBIN_API_KEY
           },
-          body: JSON.stringify(cloudDataStore)
+          body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('保存失敗');
         updateStatus("保存完了");
