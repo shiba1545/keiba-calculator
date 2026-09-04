@@ -275,13 +275,13 @@
 
       const wakuClasses = ['waku-1', 'waku-2', 'waku-3', 'waku-4', 'waku-5', 'waku-6', 'waku-7', 'waku-8'];
 
-      state.horses.forEach((h) => {
+      state.horses.forEach((h, index) => {
         const tr = document.createElement('tr');
         const wakuClass = wakuClasses[(h.num - 1) % 8];
 
         tr.innerHTML = `
           <td class="${wakuClass}">${h.num}</td>
-          <td></td>
+          <td>${index + 1}</td>
           <td class="horse-name">${h.name}</td>
           <td>${(h.winRate * 100).toFixed(1)}%</td>
           <td style="font-weight: bold;">${h.odds.toFixed(1)}</td>
@@ -315,7 +315,7 @@
 
       const wakuClasses = ['waku-1', 'waku-2', 'waku-3', 'waku-4', 'waku-5', 'waku-6', 'waku-7', 'waku-8'];
 
-      resultList.forEach((h) => {
+      resultList.forEach((h, index) => {
         const tr = document.createElement('tr');
         const wakuClass = wakuClasses[(h.num - 1) % 8];
         const rankDisplay = h.currentRank <= 6 ? `${h.currentRank}着` : '-';
@@ -323,7 +323,7 @@
         tr.innerHTML = `
           <td style="font-weight: bold; color: #d32f2f;">${rankDisplay}</td>
           <td class="${wakuClass}">${h.num}</td>
-          <td></td>
+          <td>${index + 1}</td>
           <td class="horse-name">${h.name}</td>
           <td>${(h.winRate * 100).toFixed(1)}%</td>
           <td style="font-weight: bold;">${h.odds.toFixed(1)}</td>
