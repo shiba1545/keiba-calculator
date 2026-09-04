@@ -27,16 +27,16 @@
       vertical-align: middle;
     }
     
-    /* 馬番の枠色スタイル（色指定） */
-    .color-white  { background-color: #ffffff; color: #000; font-weight: bold; } /* 白 */
-    .color-black  { background-color: #222222; color: #fff; font-weight: bold; } /* 黒 */
-    .color-red    { background-color: #e53935; color: #fff; font-weight: bold; } /* 赤 */
-    .color-blue   { background-color: #1e88e5; color: #fff; font-weight: bold; } /* 青 */
-    .color-yellow { background-color: #fdd835; color: #000; font-weight: bold; } /* 黄 */
-    .color-green  { background-color: #43a047; color: #fff; font-weight: bold; } /* 緑 */
-    .color-orange { background-color: #fb8c00; color: #fff; font-weight: bold; } /* 橙・オレンジ */
-    .color-pink   { background-color: #f48fb1; color: #fff; font-weight: bold; } /* 桃色・ピンク */
-    .color-cyan   { background-color: #00bcd4; color: #fff; font-weight: bold; } /* 水色 */
+    /* 馬番の枠色スタイル */
+    .color-white  { background-color: #ffffff; color: #000; font-weight: bold; }
+    .color-black  { background-color: #222222; color: #fff; font-weight: bold; }
+    .color-red    { background-color: #e53935; color: #fff; font-weight: bold; }
+    .color-blue   { background-color: #1e88e5; color: #fff; font-weight: bold; }
+    .color-yellow { background-color: #fdd835; color: #000; font-weight: bold; }
+    .color-green  { background-color: #43a047; color: #fff; font-weight: bold; }
+    .color-orange { background-color: #fb8c00; color: #fff; font-weight: bold; }
+    .color-pink   { background-color: #f48fb1; color: #fff; font-weight: bold; }
+    .color-cyan   { background-color: #00bcd4; color: #fff; font-weight: bold; }
 
     .horse-name {
       font-weight: bold;
@@ -59,12 +59,20 @@
       align-items: center;
       gap: 10px;
       margin-top: 10px;
+      flex-wrap: wrap;
     }
     select, button {
       padding: 6px 12px;
       border-radius: 4px;
       border: 1px solid #ccc;
       font-size: 0.9rem;
+      cursor: pointer;
+    }
+    
+    .sync-status {
+      font-size: 0.8rem;
+      color: #666;
+      margin-left: auto;
     }
   </style>
 </head>
@@ -85,6 +93,8 @@
         </select>
         <button id="btnShowResult" class="btn btn-secondary" onclick="showCurrentRaceResult()">結果表示</button>
         <button id="btnResetDisplay" class="btn btn-danger" onclick="resetToShutubaTable()">reset</button>
+        <button onclick="fetchFromJSONBin()">手動更新</button>
+        <span id="syncStatus" class="sync-status">同期待機中</span>
       </div>
     </div>
 
@@ -108,12 +118,14 @@
   </div>
 
   <script>
+    // ===== JSONBin 設定 =====
+    const JSONBIN_BIN_ID = '6a9afcccda38895dfe395945'; 
+    const JSONBIN_API_KEY = '$2a$10$m3qUmeizOg.oKyptUpbxcObKcTYCK0HFZZffxeDHdfcP37cjFU.ki';
+    // =======================
+
     window.state = window.state || { deductionRate: 0.25, horses: [] };
+    let cloudDataStore = {}; // クラウドから取得した全レースの列データ
 
-    // 保存用キーのプレフィックス
-    const STORAGE_KEY_PREFIX = 'keiba_race_column_';
-
-    // 馬名ごとの色設定マップ
     const horseColorMap = {
       "アサノヒカリノナカデ": "color-cyan",
       "イノイノックス(メイド)": "color-pink",
@@ -215,6 +227,51 @@
       [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6]
     ];
 
+    function updateStatus(text) {
+      const el = document.getElementById('syncStatus');
+      if (el) el.textContent = text;
+    }
+
+    // JSONBin からデータ取得
+    async function fetchFromJSONBin() {
+      updateStatus("クラウドから取得中...");
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+          headers: { 'X-Master-Key': JSONBIN_API_KEY }
+        });
+        if (!res.ok) throw new Error('取得失敗');
+        const data = await res.json();
+        cloudDataStore = data.record || {};
+        updateStatus("同期完了");
+        
+        const select = document.getElementById('raceSelect');
+        changeRace(select ? select.value : 1);
+      } catch (e) {
+        console.error(e);
+        updateStatus("取得エラー");
+      }
+    }
+
+    // JSONBin へデータ保存
+    async function saveToJSONBin() {
+      updateStatus("保存中...");
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': JSONBIN_API_KEY
+          },
+          body: JSON.stringify(cloudDataStore)
+        });
+        if (!res.ok) throw new Error('保存失敗');
+        updateStatus("保存完了");
+      } catch (e) {
+        console.error(e);
+        updateStatus("保存エラー");
+      }
+    }
+
     function initHorses() {
       state.horses = [];
       for (let i = 1; i <= 6; i++) {
@@ -247,7 +304,7 @@
         select.value = 1;
       }
 
-      changeRace(1);
+      fetchFromJSONBin();
     });
 
     function changeRace(raceIndex) {
@@ -265,7 +322,6 @@
     function updateRaceTitle(raceIndex) {
       const idx = parseInt(raceIndex) - 1;
       const locationText = raceLocations[idx] || "不明なコース";
-      
       const titleElement = document.getElementById('raceTitle');
       if (titleElement) {
         titleElement.textContent = `第${raceIndex}回 横浜サイエンスフロンティア杯 (${locationText})`;
@@ -278,18 +334,7 @@
       const deductionRate = 0.25;
 
       const currentNames = raceHorseNames[idx] || ["馬番1", "馬番2", "馬番3", "馬番4", "馬番5", "馬番6"];
-      
-      // localStorage から各レースの列の設定をロード（無ければデフォルト値）
-      let savedColumns = null;
-      try {
-        const storedData = localStorage.getItem(STORAGE_KEY_PREFIX + raceIndex);
-        if (storedData) {
-          savedColumns = JSON.parse(storedData);
-        }
-      } catch (e) {
-        console.error("ローカルストレージの読み込みエラー:", e);
-      }
-
+      const savedColumns = cloudDataStore[raceIndex];
       const defaultColumns = columnHistory[idx] || [1, 2, 3, 4, 5, 6];
 
       state.horses.forEach((h) => {
@@ -338,19 +383,13 @@
         horse.columnVal = val;
       }
 
-      // 現在選択中のレース番号を取得して localStorage に保存
       const raceSelect = document.getElementById('raceSelect');
       const currentRace = raceSelect ? raceSelect.value : 1;
       
-      const columnsToSave = state.horses.map(h => h.columnVal);
-      try {
-        localStorage.setItem(STORAGE_KEY_PREFIX + currentRace, JSON.stringify(columnsToSave));
-      } catch (e) {
-        console.error("ローカルストレージの保存エラー:", e);
-      }
+      cloudDataStore[currentRace] = state.horses.map(h => h.columnVal);
+      saveToJSONBin();
     }
 
-    // 馬名から対応する枠色クラスを取得（未設定時は枠番(1-8)ベースにフォールバック）
     function getHorseColorClass(horseName, horseNum) {
       if (horseColorMap[horseName]) {
         return horseColorMap[horseName];
