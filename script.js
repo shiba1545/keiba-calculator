@@ -193,7 +193,7 @@ function calculateOddsAndResults() {
     if (h.winRate > 0) {
       const rawOdds = (1 - deductionRate) / h.winRate;
       calculatedOdds = Math.floor(rawOdds * 10) / 10;
-      if (calculatedOdds < 1.0) calculatedOdds = 1.0;
+      if (calculatedOdds < 0.1) calculatedOdds = 0.1;
       if (calculatedOdds > 99.0) calculatedOdds = 99.0;
     }
     h.odds = calculatedOdds;
@@ -248,7 +248,7 @@ function calculateExactaOdds() {
 
   const prob = (h1.winRate + h2.winRate) > 0 ? h1.winRate * (h2.winRate / (h1.winRate + h2.winRate)) : 0;
   let odds = prob > 0 ? Math.floor(((1 - state.deductionRate) / prob) * 10) / 10 : 256.0;
-  odds = Math.min(Math.max(odds, 1.0), 256.0);
+  odds = Math.min(Math.max(odds, 0.1), 256.0);
 
   const oddsTxt = document.getElementById("exactaOddsText");
   const payTxt = document.getElementById("exactaPayoutText");
@@ -281,7 +281,7 @@ function calculateTrifectaOdds() {
   }
 
   let odds = prob > 0 ? Math.floor(((1 - state.deductionRate) / prob) * 10) / 10 : 512.0;
-  odds = Math.min(Math.max(odds, 1.0), 512.0);
+  odds = Math.min(Math.max(odds, 0.1), 512.0);
 
   const oddsTxt = document.getElementById("trifectaOddsText");
   const payTxt = document.getElementById("trifectaPayoutText");
@@ -341,7 +341,7 @@ function showHistoryAtRace(raceIndex) {
 
     if (winRate > 0) {
       let calculated = Math.floor(rawOdds * 10) / 10;
-      if (calculated < 1.0) calculated = 1.0;
+      if (calculated < 0.1) calculated = 0.1;
       if (calculated > 99.0) calculated = 99.0;
       h.odds = calculated;
     } else {
