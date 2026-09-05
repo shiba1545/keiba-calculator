@@ -455,7 +455,7 @@
       resultList.forEach((h) => {
         const tr = document.createElement('tr');
         const colorClass = getHorseColorClass(h.name, h.num);
-        const rankDisplay = (h.currentRank === "失格" || isNaN(h.currentRank)) ? '失格' : `${h.currentRank}着`;
+        const rankDisplay = (h.currentRank === "失格" || h.currentRank > 6) ? '失格' : `${h.currentRank}着`;
 
         tr.innerHTML = `
           <td style="font-weight: bold; color: #d32f2f;">${rankDisplay}</td>
