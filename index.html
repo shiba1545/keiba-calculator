@@ -328,7 +328,7 @@
         if (winRate > 0) {
           let rawOdds = (1 - deduction) / winRate;
           let calculated = Math.floor(rawOdds * 10) / 10;
-          h.odds = Math.min(Math.max(calculated, 1.0), 99.0);
+          h.odds = Math.min(Math.max(calculated, 0.1), 99.0);
         } else {
           h.odds = 99.0;
         }
