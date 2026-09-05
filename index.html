@@ -328,7 +328,7 @@
         if (winRate > 0) {
           let rawOdds = (1 - deduction) / winRate;
           let calculated = Math.floor(rawOdds * 10) / 10;
-          h.odds = Math.min(Math.max(calculated, 0.1), 99.0);
+          h.odds = Math.min(Math.max(calculated, 0.1), 96.0);
         } else {
           h.odds = 99.0;
         }
@@ -457,7 +457,7 @@
       if (h1 && h2 && n1 !== n2 && h1.winRate > 0 && h2.winRate > 0) {
         let prob = h1.winRate * (h2.winRate / (1 - h1.winRate));
         let rawOdds = (1 - deduction) / prob;
-        let odds = Math.min(Math.max(Math.floor(rawOdds * 10) / 10, 1.0), 999.0);
+        let odds = Math.min(Math.max(Math.floor(rawOdds * 10) / 10, 1.0), 256.0);
         document.getElementById('nirenOdds').textContent = odds.toFixed(1);
         document.getElementById('nirenPay').textContent = Math.floor(amount * odds).toLocaleString();
       } else {
@@ -475,7 +475,7 @@
       if (sh1 && sh2 && sh3 && s1 !== s2 && s2 !== s3 && s1 !== s3 && sh1.winRate > 0) {
         let prob = sh1.winRate * (sh2.winRate / (1 - sh1.winRate)) * (sh3.winRate / (1 - sh1.winRate - sh2.winRate));
         let rawOdds = (1 - deduction) / prob;
-        let odds = Math.min(Math.max(Math.floor(rawOdds * 10) / 10, 1.0), 9999.0);
+        let odds = Math.min(Math.max(Math.floor(rawOdds * 10) / 10, 1.0), 8192.0);
         document.getElementById('sanrenOdds').textContent = odds.toFixed(1);
         document.getElementById('sanrenPay').textContent = Math.floor(amount * odds).toLocaleString();
       } else {
